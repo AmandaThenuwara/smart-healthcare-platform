@@ -10,6 +10,7 @@ from app.core.config import (
 client = None
 db = None
 
+
 def connect_to_mongo():
     global client, db
 
@@ -24,8 +25,14 @@ def connect_to_mongo():
     db = client[DATABASE_NAME]
     return db
 
+
 def get_database():
     return db
+
+
+def get_sessions_collection():
+    return get_database()["telemedicine_sessions"]
+
 
 def close_mongo_connection():
     global client
