@@ -4,3 +4,4 @@ pydantic
 python-dotenv
 pymongo
 python-jose[cryptography]
+python-multipart

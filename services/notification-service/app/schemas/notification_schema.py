@@ -1,4 +1,5 @@
 from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -12,6 +13,10 @@ class NotificationCreate(BaseModel):
     type: NotificationType
 
 
+class NotificationReadUpdate(BaseModel):
+    isRead: bool = True
+
+
 class NotificationResponse(BaseModel):
     notificationId: str
     userId: str
@@ -20,3 +25,7 @@ class NotificationResponse(BaseModel):
     type: str
     isRead: bool
     createdAt: str
+
+
+class BulkReadResponse(BaseModel):
+    updatedCount: int

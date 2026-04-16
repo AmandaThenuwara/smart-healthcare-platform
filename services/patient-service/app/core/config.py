@@ -17,3 +17,6 @@ MONGO_AUTH_SOURCE = os.getenv("MONGO_AUTH_SOURCE", "admin")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_change_this_before_production")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+UPLOAD_DIR = BASE_DIR / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
