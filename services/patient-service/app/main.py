@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.core.config import APP_NAME
+from app.core.config import APP_NAME, UPLOAD_DIR
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.api.router import api_router
 from app.services.patient_service import ensure_patient_indexes
@@ -18,6 +19,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 @app.on_event("startup")

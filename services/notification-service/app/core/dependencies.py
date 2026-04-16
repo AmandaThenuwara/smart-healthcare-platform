@@ -11,7 +11,7 @@ from app.core.config import (
     MONGO_AUTH_SOURCE,
 )
 from app.core.security import decode_access_token
-from app.db.mongodb import get_patients_collection
+from app.db.mongodb import get_notifications_collection
 
 bearer_scheme = HTTPBearer(auto_error=True)
 
@@ -55,10 +55,6 @@ def get_current_user(
     return user
 
 
-def get_current_user_id(current_user=Depends(get_current_user)) -> str:
-    return str(current_user["_id"])
-
-
 def require_roles(*allowed_roles: str):
     def role_checker(current_user=Depends(get_current_user)):
         if current_user.get("role") not in allowed_roles:
@@ -71,34 +67,32 @@ def require_roles(*allowed_roles: str):
     return role_checker
 
 
-def ensure_resource_owner_or_admin(resource_user_id: str, current_user: dict):
+def ensure_user_owner_or_admin(target_user_id: str, current_user: dict):
     if current_user.get("role") == "ADMIN":
         return
 
-    if str(resource_user_id) != str(current_user["_id"]):
+    if str(target_user_id) != str(current_user["_id"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to access this resource",
+            detail="You do not have permission to access these notifications",
         )
 
 
-def get_current_patient_profile_id(current_user: dict) -> str:
-    profile = get_patients_collection().find_one({"userId": str(current_user["_id"])})
-    if not profile:
+def ensure_notification_owner_or_admin(notification_id: str, current_user: dict):
+    try:
+        object_id = ObjectId(notification_id)
+    except (InvalidId, TypeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient profile not found for current user",
-        )
-    return str(profile["_id"])
+            detail="Notification not found",
+        ) from exc
 
-
-def ensure_patient_owner_or_admin(patient_id: str, current_user: dict):
-    if current_user.get("role") == "ADMIN":
-        return
-
-    current_patient_id = get_current_patient_profile_id(current_user)
-    if str(patient_id) != current_patient_id:
+    notification = get_notifications_collection().find_one({"_id": object_id})
+    if not notification:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to access this patient's data",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notification not found",
         )
+
+    ensure_user_owner_or_admin(notification.get("userId"), current_user)
+    return notification
