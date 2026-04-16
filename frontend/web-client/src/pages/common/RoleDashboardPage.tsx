@@ -10,6 +10,10 @@ export default function RoleDashboardPage() {
     return <Navigate to="/doctor/dashboard" replace />;
   }
 
+  if (user?.role === "PATIENT") {
+    return <Navigate to="/patient/dashboard" replace />;
+  }
+
   function handleLogout() {
     logout();
     navigate("/login", { replace: true });
@@ -44,9 +48,6 @@ export default function RoleDashboardPage() {
 
         <div style={placeholderCardStyle}>
           <h2 style={sectionTitleStyle}>Current Frontend Status</h2>
-          {user?.role === "PATIENT" && (
-            <p style={placeholderTextStyle}>Patient dashboard placeholder</p>
-          )}
           {user?.role === "ADMIN" && (
             <p style={placeholderTextStyle}>Admin dashboard placeholder</p>
           )}
