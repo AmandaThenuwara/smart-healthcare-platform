@@ -1,7 +1,5 @@
 from fastapi import FastAPI
+from app.api.router import api_router
 
 app = FastAPI(title="Gateway Service")
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "gateway"}
+app.include_router(api_router)
