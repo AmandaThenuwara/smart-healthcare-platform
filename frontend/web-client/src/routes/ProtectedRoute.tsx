@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -24,7 +25,7 @@ export default function ProtectedRoute() {
   return <Outlet />;
 }
 
-const loadingPageStyle: React.CSSProperties = {
+const loadingPageStyle: CSSProperties = {
   minHeight: "100vh",
   display: "flex",
   justifyContent: "center",
@@ -33,7 +34,7 @@ const loadingPageStyle: React.CSSProperties = {
   padding: "24px",
 };
 
-const loadingCardStyle: React.CSSProperties = {
+const loadingCardStyle: CSSProperties = {
   width: "100%",
   maxWidth: "420px",
   padding: "28px",

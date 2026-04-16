@@ -1,29 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import type { CSSProperties } from "react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function RoleDashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  if (user?.role === "DOCTOR") {
+    return <Navigate to="/doctor/dashboard" replace />;
+  }
+
   function handleLogout() {
     logout();
     navigate("/login", { replace: true });
-  }
-
-  function getRoleMessage() {
-    if (user?.role === "PATIENT") {
-      return "Patient dashboard placeholder";
-    }
-
-    if (user?.role === "DOCTOR") {
-      return "Doctor dashboard placeholder";
-    }
-
-    if (user?.role === "ADMIN") {
-      return "Admin dashboard placeholder";
-    }
-
-    return "Role dashboard placeholder";
   }
 
   return (
@@ -54,26 +43,34 @@ export default function RoleDashboardPage() {
         </div>
 
         <div style={placeholderCardStyle}>
-          <h2 style={sectionTitleStyle}>Role Area</h2>
-          <p style={placeholderTextStyle}>{getRoleMessage()}</p>
+          <h2 style={sectionTitleStyle}>Current Frontend Status</h2>
+          {user?.role === "PATIENT" && (
+            <p style={placeholderTextStyle}>Patient dashboard placeholder</p>
+          )}
+          {user?.role === "ADMIN" && (
+            <p style={placeholderTextStyle}>Admin dashboard placeholder</p>
+          )}
+          {!user?.role && (
+            <p style={placeholderTextStyle}>Role dashboard placeholder</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-const pageStyle: React.CSSProperties = {
+const pageStyle: CSSProperties = {
   minHeight: "100vh",
   background: "#f4f7fb",
   padding: "32px",
 };
 
-const containerStyle: React.CSSProperties = {
+const containerStyle: CSSProperties = {
   maxWidth: "900px",
   margin: "0 auto",
 };
 
-const headerRowStyle: React.CSSProperties = {
+const headerRowStyle: CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
@@ -82,17 +79,17 @@ const headerRowStyle: React.CSSProperties = {
   flexWrap: "wrap",
 };
 
-const titleStyle: React.CSSProperties = {
+const titleStyle: CSSProperties = {
   margin: 0,
   marginBottom: "8px",
 };
 
-const subtitleStyle: React.CSSProperties = {
+const subtitleStyle: CSSProperties = {
   margin: 0,
   color: "#4b5563",
 };
 
-const infoCardStyle: React.CSSProperties = {
+const infoCardStyle: CSSProperties = {
   background: "white",
   borderRadius: "16px",
   padding: "24px",
@@ -100,29 +97,29 @@ const infoCardStyle: React.CSSProperties = {
   marginBottom: "20px",
 };
 
-const placeholderCardStyle: React.CSSProperties = {
+const placeholderCardStyle: CSSProperties = {
   background: "white",
   borderRadius: "16px",
   padding: "24px",
   boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
 };
 
-const sectionTitleStyle: React.CSSProperties = {
+const sectionTitleStyle: CSSProperties = {
   marginTop: 0,
   marginBottom: "16px",
 };
 
-const infoTextStyle: React.CSSProperties = {
+const infoTextStyle: CSSProperties = {
   margin: "8px 0",
   color: "#111827",
 };
 
-const placeholderTextStyle: React.CSSProperties = {
+const placeholderTextStyle: CSSProperties = {
   margin: 0,
   color: "#374151",
 };
 
-const logoutButtonStyle: React.CSSProperties = {
+const logoutButtonStyle: CSSProperties = {
   padding: "10px 16px",
   border: "none",
   borderRadius: "10px",
