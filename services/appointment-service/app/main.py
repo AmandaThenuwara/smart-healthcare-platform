@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.core.config import APP_NAME
-from app.db.mongodb import connect_to_mongo, close_mongo_connection, get_database
+from app.db.mongodb import connect_to_mongo, close_mongo_connection
+from app.api.router import api_router
 
 app = FastAPI(title=APP_NAME)
 
@@ -12,11 +13,4 @@ def startup_event():
 def shutdown_event():
     close_mongo_connection()
 
-@app.get("/health")
-def health_check():
-    database = get_database()
-    return {
-        "status": "ok",
-        "service": APP_NAME,
-        "database": "connected" if database is not None else "disconnected"
-    }
+app.include_router(api_router)
