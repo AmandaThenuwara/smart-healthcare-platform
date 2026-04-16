@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -7,6 +7,10 @@ import DoctorAppointmentsPage from "./pages/doctor/DoctorAppointmentsPage";
 import DoctorAvailabilityPage from "./pages/doctor/DoctorAvailabilityPage";
 import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
 import DoctorProfilePage from "./pages/doctor/DoctorProfilePage";
+import PatientDashboardPage from "./pages/patient/PatientDashboardPage";
+import PatientNotificationsPage from "./pages/patient/PatientNotificationsPage";
+import PatientProfilePage from "./pages/patient/PatientProfilePage";
+import PatientReportsPage from "./pages/patient/PatientReportsPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleProtectedRoute from "./routes/RoleProtectedRoute";
 
@@ -15,7 +19,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
@@ -28,9 +32,14 @@ function App() {
               <Route path="/doctor/availability" element={<DoctorAvailabilityPage />} />
               <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route element={<RoleProtectedRoute allowedRoles={["PATIENT"]} />}>
+              <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
+              <Route path="/patient/profile" element={<PatientProfilePage />} />
+              <Route path="/patient/reports" element={<PatientReportsPage />} />
+              <Route path="/patient/notifications" element={<PatientNotificationsPage />} />
+            </Route>
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
