@@ -7,10 +7,13 @@ import DoctorAppointmentsPage from "./pages/doctor/DoctorAppointmentsPage";
 import DoctorAvailabilityPage from "./pages/doctor/DoctorAvailabilityPage";
 import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
 import DoctorProfilePage from "./pages/doctor/DoctorProfilePage";
+import DoctorTelemedicinePage from "./pages/doctor/DoctorTelemedicinePage";
 import PatientDashboardPage from "./pages/patient/PatientDashboardPage";
 import PatientNotificationsPage from "./pages/patient/PatientNotificationsPage";
+import PatientPaymentsPage from "./pages/patient/PatientPaymentsPage";
 import PatientProfilePage from "./pages/patient/PatientProfilePage";
 import PatientReportsPage from "./pages/patient/PatientReportsPage";
+import PatientTelemedicinePage from "./pages/patient/PatientTelemedicinePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleProtectedRoute from "./routes/RoleProtectedRoute";
 
@@ -31,6 +34,7 @@ function App() {
               <Route path="/doctor/profile" element={<DoctorProfilePage />} />
               <Route path="/doctor/availability" element={<DoctorAvailabilityPage />} />
               <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
+              <Route path="/doctor/telemedicine" element={<DoctorTelemedicinePage />} />
             </Route>
 
             <Route element={<RoleProtectedRoute allowedRoles={["PATIENT"]} />}>
@@ -38,6 +42,8 @@ function App() {
               <Route path="/patient/profile" element={<PatientProfilePage />} />
               <Route path="/patient/reports" element={<PatientReportsPage />} />
               <Route path="/patient/notifications" element={<PatientNotificationsPage />} />
+              <Route path="/patient/payments" element={<PatientPaymentsPage />} />
+              <Route path="/patient/telemedicine" element={<PatientTelemedicinePage />} />
             </Route>
           </Route>
         </Routes>

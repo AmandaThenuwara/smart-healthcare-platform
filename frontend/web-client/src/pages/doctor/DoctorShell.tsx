@@ -41,6 +41,9 @@ export default function DoctorShell({
             <Link to="/doctor/appointments" style={navLinkStyle}>
               Appointments
             </Link>
+            <Link to="/doctor/telemedicine" style={navLinkStyle}>
+              Telemedicine
+            </Link>
           </nav>
         </div>
 
