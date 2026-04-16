@@ -41,6 +41,12 @@ export default function PatientShell({
             <Link to="/patient/notifications" style={navLinkStyle}>
               Notifications
             </Link>
+            <Link to="/patient/payments" style={navLinkStyle}>
+              Payments
+            </Link>
+            <Link to="/patient/telemedicine" style={navLinkStyle}>
+              Telemedicine
+            </Link>
           </nav>
         </div>
 
