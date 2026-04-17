@@ -1,14 +1,16 @@
 from datetime import datetime, timezone
 
 
-def build_appointment_document(payload) -> dict:
+def build_appointment_document(payload, slot_id: str, slot_end_time: str) -> dict:
     initial_status = "PAYMENT_PENDING" if payload.consultationType == "ONLINE" else "PENDING"
 
     return {
         "patientId": payload.patientId,
         "doctorId": payload.doctorId,
+        "slotId": slot_id,
         "date": payload.date,
         "timeSlot": payload.timeSlot,
+        "slotEndTime": slot_end_time,
         "reason": payload.reason.strip(),
         "consultationType": payload.consultationType,
         "status": initial_status,

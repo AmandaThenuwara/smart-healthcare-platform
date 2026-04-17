@@ -17,6 +17,26 @@ from app.utils.notification_dispatcher import dispatch_bulk_notifications
 
 ACTIVE_CONFLICT_STATUSES = ["PAYMENT_PENDING", "PENDING", "CONFIRMED", "RESCHEDULED"]
 
+DOCTOR_ALLOWED_STATUS_TRANSITIONS = {
+    "PAYMENT_PENDING": {"REJECTED", "CANCELLED"},
+    "PENDING": {"CONFIRMED", "REJECTED", "CANCELLED"},
+    "CONFIRMED": {"COMPLETED", "CANCELLED"},
+    "REJECTED": set(),
+    "RESCHEDULED": set(),
+    "CANCELLED": set(),
+    "COMPLETED": set(),
+}
+
+PATIENT_ALLOWED_STATUS_TRANSITIONS = {
+    "PAYMENT_PENDING": {"CANCELLED"},
+    "PENDING": {"CANCELLED"},
+    "CONFIRMED": {"CANCELLED"},
+    "REJECTED": set(),
+    "RESCHEDULED": set(),
+    "CANCELLED": set(),
+    "COMPLETED": set(),
+}
+
 _service_client = MongoClient(
     MONGO_URI,
     username=MONGO_USERNAME,
@@ -26,12 +46,14 @@ _service_client = MongoClient(
 
 _patients_collection = _service_client["patient_db"]["patients"]
 _doctors_collection = _service_client["doctor_db"]["doctors"]
+_availability_collection = _service_client["doctor_db"]["availability_slots"]
 
 
 def ensure_appointment_indexes():
     appointments = get_appointments_collection()
     appointments.create_index("patientId")
     appointments.create_index("doctorId")
+    appointments.create_index("slotId")
     appointments.create_index([("doctorId", 1), ("date", 1), ("timeSlot", 1)])
 
 
@@ -60,8 +82,129 @@ def _get_doctor_or_404(doctor_id: str):
     return doctor
 
 
+def _get_available_slot_or_400(doctor_id: str, date: str, start_time: str):
+    slot = _availability_collection.find_one(
+        {
+            "doctorId": doctor_id,
+            "date": date,
+            "startTime": start_time,
+            "isAvailable": True,
+        }
+    )
+    if not slot:
+        raise HTTPException(
+            status_code=400,
+            detail="Selected slot is not available for booking",
+        )
+    return slot
+
+
+def _reserve_slot(slot: dict):
+    result = _availability_collection.update_one(
+        {"_id": slot["_id"], "isAvailable": True},
+        {
+            "$set": {
+                "isAvailable": False,
+                "updatedAt": datetime.now(timezone.utc),
+            }
+        },
+    )
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Selected slot is no longer available",
+        )
+
+
+def _release_slot(appointment: dict):
+    slot_id = appointment.get("slotId")
+    if slot_id:
+        _availability_collection.update_one(
+            {"_id": _to_object_id(slot_id, "Availability slot not found")},
+            {
+                "$set": {
+                    "isAvailable": True,
+                    "updatedAt": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return
+
+    _availability_collection.update_one(
+        {
+            "doctorId": appointment["doctorId"],
+            "date": appointment["date"],
+            "startTime": appointment["timeSlot"],
+        },
+        {
+            "$set": {
+                "isAvailable": True,
+                "updatedAt": datetime.now(timezone.utc),
+            }
+        },
+    )
+
+
 def _appointment_label(appointment: dict) -> str:
     return f"{appointment.get('date')} at {appointment.get('timeSlot')}"
+
+
+def _append_status_history(appointment: dict, new_status: str):
+    history = appointment.get("statusHistory", [])
+    history.append(
+        {
+            "status": new_status,
+            "changedAt": datetime.now(timezone.utc),
+        }
+    )
+    return history
+
+
+def _apply_status_change(appointment: dict, new_status: str):
+    history = _append_status_history(appointment, new_status)
+
+    get_appointments_collection().update_one(
+        {"_id": appointment["_id"]},
+        {
+            "$set": {
+                "status": new_status,
+                "statusHistory": history,
+                "updatedAt": datetime.now(timezone.utc),
+            }
+        },
+    )
+
+    updated = get_appointments_collection().find_one({"_id": appointment["_id"]})
+    return updated
+
+
+def _dispatch_status_notifications(updated: dict, old_status: str, new_status: str):
+    patient = _get_patient_or_404(updated.get("patientId"))
+    doctor = _get_doctor_or_404(updated.get("doctorId"))
+    appointment_text = _appointment_label(updated)
+
+    dispatch_bulk_notifications(
+        [
+            {
+                "user_id": patient.get("userId"),
+                "title": "Appointment Status Updated",
+                "message": f"Your appointment with {doctor.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.",
+                "notification_type": "APPOINTMENT",
+                "email_to": patient.get("email"),
+                "email_subject": "Appointment Status Updated - Smart Healthcare",
+                "email_body": f"Hello {patient.get('fullName')},\n\nYour appointment with {doctor.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
+            },
+            {
+                "user_id": doctor.get("userId"),
+                "title": "Appointment Status Updated",
+                "message": f"Appointment with {patient.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.",
+                "notification_type": "APPOINTMENT",
+                "email_to": doctor.get("email"),
+                "email_subject": "Appointment Status Updated - Smart Healthcare",
+                "email_body": f"Hello {doctor.get('fullName')},\n\nThe appointment with {patient.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
+            },
+        ]
+    )
 
 
 def create_appointment(payload):
@@ -69,6 +212,12 @@ def create_appointment(payload):
 
     patient = _get_patient_or_404(payload.patientId)
     doctor = _get_doctor_or_404(payload.doctorId)
+
+    if doctor.get("approvalStatus") != "APPROVED":
+        raise HTTPException(
+            status_code=400,
+            detail="Appointments can only be booked with approved doctors",
+        )
 
     existing = appointments.find_one(
         {
@@ -84,7 +233,29 @@ def create_appointment(payload):
             detail="This doctor already has an active appointment for the selected slot",
         )
 
-    result = appointments.insert_one(build_appointment_document(payload))
+    slot = _get_available_slot_or_400(
+        payload.doctorId,
+        payload.date,
+        payload.timeSlot,
+    )
+
+    _reserve_slot(slot)
+
+    try:
+        result = appointments.insert_one(
+            build_appointment_document(
+                payload=payload,
+                slot_id=str(slot["_id"]),
+                slot_end_time=slot["endTime"],
+            )
+        )
+    except Exception:
+        _availability_collection.update_one(
+            {"_id": slot["_id"]},
+            {"$set": {"isAvailable": True, "updatedAt": datetime.now(timezone.utc)}},
+        )
+        raise
+
     created = appointments.find_one({"_id": result.inserted_id})
     serialized = serialize_appointment(created)
 
@@ -119,72 +290,75 @@ def create_appointment(payload):
 
 
 def list_appointments_by_patient(patient_id: str):
-    cursor = get_appointments_collection().find({"patientId": patient_id}).sort([("createdAt", -1)])
+    cursor = get_appointments_collection().find({"patientId": patient_id}).sort(
+        [("date", 1), ("timeSlot", 1), ("createdAt", -1)]
+    )
     return [serialize_appointment(doc) for doc in cursor]
 
 
 def list_appointments_by_doctor(doctor_id: str):
-    cursor = get_appointments_collection().find({"doctorId": doctor_id}).sort([("createdAt", -1)])
+    cursor = get_appointments_collection().find({"doctorId": doctor_id}).sort(
+        [("date", 1), ("timeSlot", 1), ("createdAt", -1)]
+    )
     return [serialize_appointment(doc) for doc in cursor]
+
+
+def get_appointment_by_id(appointment_id: str):
+    appointment = get_appointments_collection().find_one(
+        {"_id": _to_object_id(appointment_id, "Appointment not found")}
+    )
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    return serialize_appointment(appointment)
 
 
 def update_appointment_status(appointment_id: str, payload):
     appointments = get_appointments_collection()
-    appointment = appointments.find_one({"_id": ObjectId(appointment_id)})
+    appointment = appointments.find_one({"_id": _to_object_id(appointment_id, "Appointment not found")})
 
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    patient = _get_patient_or_404(appointment.get("patientId"))
-    doctor = _get_doctor_or_404(appointment.get("doctorId"))
-
-    new_status = payload.status
     old_status = appointment.get("status")
-    history = appointment.get("statusHistory", [])
-    history.append(
-        {
-            "status": new_status,
-            "changedAt": datetime.now(timezone.utc),
-        }
-    )
+    new_status = payload.status
 
-    appointments.update_one(
-        {"_id": ObjectId(appointment_id)},
-        {
-            "$set": {
-                "status": new_status,
-                "statusHistory": history,
-                "updatedAt": datetime.now(timezone.utc),
-            }
-        },
-    )
-
-    updated = appointments.find_one({"_id": ObjectId(appointment_id)})
-    serialized = serialize_appointment(updated)
-
-    if new_status != old_status:
-        appointment_text = _appointment_label(updated)
-        dispatch_bulk_notifications(
-            [
-                {
-                    "user_id": patient.get("userId"),
-                    "title": "Appointment Status Updated",
-                    "message": f"Your appointment with {doctor.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.",
-                    "notification_type": "APPOINTMENT",
-                    "email_to": patient.get("email"),
-                    "email_subject": "Appointment Status Updated - Smart Healthcare",
-                    "email_body": f"Hello {patient.get('fullName')},\n\nYour appointment with {doctor.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
-                },
-                {
-                    "user_id": doctor.get("userId"),
-                    "title": "Appointment Status Updated",
-                    "message": f"Appointment with {patient.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.",
-                    "notification_type": "APPOINTMENT",
-                    "email_to": doctor.get("email"),
-                    "email_subject": "Appointment Status Updated - Smart Healthcare",
-                    "email_body": f"Hello {doctor.get('fullName')},\n\nThe appointment with {patient.get('fullName')} on {appointment_text} changed from {old_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
-                },
-            ]
+    allowed = DOCTOR_ALLOWED_STATUS_TRANSITIONS.get(old_status, set())
+    if new_status not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid appointment status transition from {old_status} to {new_status}",
         )
 
-    return serialized
+    updated = _apply_status_change(appointment, new_status)
+
+    if new_status in {"REJECTED", "CANCELLED"}:
+        _release_slot(updated)
+        updated = get_appointments_collection().find_one({"_id": appointment["_id"]})
+
+    _dispatch_status_notifications(updated, old_status, new_status)
+    return serialize_appointment(updated)
+
+
+def cancel_appointment_by_patient(appointment_id: str):
+    appointments = get_appointments_collection()
+    appointment = appointments.find_one({"_id": _to_object_id(appointment_id, "Appointment not found")})
+
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    old_status = appointment.get("status")
+    new_status = "CANCELLED"
+
+    allowed = PATIENT_ALLOWED_STATUS_TRANSITIONS.get(old_status, set())
+    if new_status not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Patient cannot cancel appointment when status is {old_status}",
+        )
+
+    updated = _apply_status_change(appointment, new_status)
+    _release_slot(updated)
+    updated = get_appointments_collection().find_one({"_id": appointment["_id"]})
+
+    _dispatch_status_notifications(updated, old_status, new_status)
+    return serialize_appointment(updated)

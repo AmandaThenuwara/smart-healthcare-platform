@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.dependencies import (
     ensure_appointment_belongs_to_doctor_or_admin,
@@ -14,7 +14,9 @@ from app.schemas.appointment_schema import (
     AppointmentResponse,
 )
 from app.services.appointment_service import (
+    cancel_appointment_by_patient,
     create_appointment,
+    get_appointment_by_id,
     list_appointments_by_patient,
     list_appointments_by_doctor,
     update_appointment_status,
@@ -36,6 +38,28 @@ def create_new_appointment(
         patientId=get_current_patient_profile_id(current_user),
     )
     return create_appointment(enforced_payload)
+
+
+@router.get("/{appointment_id}", response_model=AppointmentResponse)
+def get_single_appointment(
+    appointment_id: str,
+    current_user=Depends(require_roles("PATIENT", "DOCTOR", "ADMIN")),
+):
+    appointment = get_appointment_by_id(appointment_id)
+
+    if current_user.get("role") == "ADMIN":
+        return appointment
+
+    if current_user.get("role") == "PATIENT":
+        current_patient_id = get_current_patient_profile_id(current_user)
+        if appointment["patientId"] != current_patient_id:
+            raise HTTPException(status_code=403, detail="You do not have permission to access this appointment")
+        return appointment
+
+    current_doctor_id = get_current_doctor_profile_id(current_user)
+    if appointment["doctorId"] != current_doctor_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to access this appointment")
+    return appointment
 
 
 @router.get("/patient/{patient_id}", response_model=list[AppointmentResponse])
@@ -64,3 +88,18 @@ def change_appointment_status(
 ):
     ensure_appointment_belongs_to_doctor_or_admin(appointment_id, current_user)
     return update_appointment_status(appointment_id, payload)
+
+
+@router.post("/{appointment_id}/cancel", response_model=AppointmentResponse)
+def cancel_my_appointment(
+    appointment_id: str,
+    current_user=Depends(require_roles("PATIENT", "ADMIN")),
+):
+    appointment = get_appointment_by_id(appointment_id)
+
+    if current_user.get("role") != "ADMIN":
+        current_patient_id = get_current_patient_profile_id(current_user)
+        if appointment["patientId"] != current_patient_id:
+            raise HTTPException(status_code=403, detail="You do not have permission to cancel this appointment")
+
+    return cancel_appointment_by_patient(appointment_id)

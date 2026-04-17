@@ -7,8 +7,6 @@ export type AppointmentStatus =
   | "CANCELLED"
   | "COMPLETED";
 
-export type ConsultationType = "ONLINE" | "PHYSICAL";
-
 export interface AppointmentStatusHistoryItem {
   status: AppointmentStatus;
   changedAt: string;
@@ -21,11 +19,16 @@ export interface Appointment {
   date: string;
   timeSlot: string;
   reason: string;
-  consultationType: ConsultationType;
+  consultationType: "ONLINE" | "PHYSICAL";
   status: AppointmentStatus;
   statusHistory: AppointmentStatusHistoryItem[];
 }
 
-export interface UpdateAppointmentStatusPayload {
-  status: AppointmentStatus;
+export interface CreateAppointmentPayload {
+  patientId: string;
+  doctorId: string;
+  date: string;
+  timeSlot: string;
+  reason: string;
+  consultationType: "ONLINE" | "PHYSICAL";
 }

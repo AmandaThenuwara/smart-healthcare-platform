@@ -3,7 +3,9 @@ import type {
   AvailabilitySlot,
   CreateAvailabilityPayload,
   CreateDoctorPayload,
+  DoctorBrowseItem,
   DoctorProfile,
+  UpdateAvailabilityPayload,
   UpdateDoctorPayload,
 } from "../types/doctor";
 
@@ -24,8 +26,15 @@ export async function createDoctorProfile(
   return response.data;
 }
 
-export async function getDoctorProfile(doctorId: string): Promise<DoctorProfile> {
+export async function getDoctorProfile(
+  doctorId: string
+): Promise<DoctorProfile> {
   const response = await doctorApi.get(`/doctors/${doctorId}`);
+  return response.data;
+}
+
+export async function getMyDoctorProfile(): Promise<DoctorProfile> {
+  const response = await doctorApi.get("/doctors/me");
   return response.data;
 }
 
@@ -37,6 +46,28 @@ export async function updateDoctorProfile(
   return response.data;
 }
 
+export async function browseApprovedDoctors(params?: {
+  search?: string;
+  specialty?: string;
+  hospital?: string;
+}): Promise<DoctorBrowseItem[]> {
+  const response = await doctorApi.get("/doctors/browse", {
+    params: {
+      search: params?.search || undefined,
+      specialty: params?.specialty || undefined,
+      hospital: params?.hospital || undefined,
+    },
+  });
+  return response.data;
+}
+
+export async function getPublicDoctorProfile(
+  doctorId: string
+): Promise<DoctorBrowseItem> {
+  const response = await doctorApi.get(`/doctors/public/${doctorId}`);
+  return response.data;
+}
+
 export async function createAvailabilitySlot(
   payload: CreateAvailabilityPayload
 ): Promise<AvailabilitySlot> {
@@ -45,9 +76,36 @@ export async function createAvailabilitySlot(
 }
 
 export async function getAvailabilitySlots(
-  doctorId: string
+  doctorId: string,
+  availableOnly = false
 ): Promise<AvailabilitySlot[]> {
-  const response = await doctorApi.get(`/availability/${doctorId}`);
+  const response = await doctorApi.get(`/availability/${doctorId}`, {
+    params: {
+      availableOnly,
+    },
+  });
+  return response.data;
+}
+
+export async function getAvailabilitySlot(
+  slotId: string
+): Promise<AvailabilitySlot> {
+  const response = await doctorApi.get(`/availability/slot/${slotId}`);
+  return response.data;
+}
+
+export async function updateAvailabilitySlot(
+  slotId: string,
+  payload: UpdateAvailabilityPayload
+): Promise<AvailabilitySlot> {
+  const response = await doctorApi.put(`/availability/slot/${slotId}`, payload);
+  return response.data;
+}
+
+export async function deleteAvailabilitySlot(
+  slotId: string
+): Promise<{ message: string }> {
+  const response = await doctorApi.delete(`/availability/slot/${slotId}`);
   return response.data;
 }
 

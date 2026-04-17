@@ -1,32 +1,36 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException
 
-from app.core.dependencies import ensure_resource_owner_or_admin, require_roles
+from app.core.dependencies import require_roles
 from app.schemas.doctor_schema import (
+    DoctorBrowseResponse,
     DoctorProfileCreate,
-    DoctorProfileUpdate,
     DoctorProfileResponse,
+    DoctorProfileUpdate,
 )
 from app.services.doctor_service import (
     create_doctor_profile,
     get_doctor_profile,
+    get_doctor_profile_by_user_id,
+    get_public_doctor_profile,
+    list_public_doctors,
     update_doctor_profile,
 )
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
 
 
-def _extract_user_id(resource) -> str | None:
-    if isinstance(resource, dict):
-        return resource.get("userId")
+@router.get("/browse", response_model=list[DoctorBrowseResponse])
+def browse_doctors(
+    search: str | None = Query(default=None),
+    specialty: str | None = Query(default=None),
+    hospital: str | None = Query(default=None),
+):
+    return list_public_doctors(search=search, specialty=specialty, hospital=hospital)
 
-    user_id = getattr(resource, "userId", None)
-    if user_id is not None:
-        return user_id
 
-    if hasattr(resource, "model_dump"):
-        return resource.model_dump().get("userId")
-
-    return None
+@router.get("/public/{doctor_id}", response_model=DoctorBrowseResponse)
+def get_public_doctor(doctor_id: str):
+    return get_public_doctor_profile(doctor_id)
 
 
 @router.post("", response_model=DoctorProfileResponse, status_code=201)
@@ -38,12 +42,25 @@ def create_doctor(
         return create_doctor_profile(payload)
 
     enforced_payload = DoctorProfileCreate(
-        **payload.model_dump(exclude={"userId", "fullName", "email"}),
+        **payload.model_dump(exclude={"userId", "fullName", "email", "approvalStatus"}),
         userId=str(current_user["_id"]),
         fullName=current_user.get("fullName", ""),
         email=current_user.get("email", ""),
+        approvalStatus="PENDING",
     )
     return create_doctor_profile(enforced_payload)
+
+
+@router.get("/me", response_model=DoctorProfileResponse)
+def get_my_doctor_profile(
+    current_user=Depends(require_roles("DOCTOR", "ADMIN")),
+):
+    if current_user.get("role") == "ADMIN":
+        raise HTTPException(
+            status_code=400,
+            detail="Admin does not have a single doctor profile. Use specific doctor endpoints instead.",
+        )
+    return get_doctor_profile_by_user_id(str(current_user["_id"]))
 
 
 @router.get("/{doctor_id}", response_model=DoctorProfileResponse)
@@ -52,7 +69,10 @@ def get_doctor(
     current_user=Depends(require_roles("DOCTOR", "ADMIN")),
 ):
     profile = get_doctor_profile(doctor_id)
-    ensure_resource_owner_or_admin(_extract_user_id(profile), current_user)
+
+    if current_user.get("role") != "ADMIN" and profile["userId"] != str(current_user["_id"]):
+        raise HTTPException(status_code=403, detail="You do not have permission to access this doctor profile")
+
     return profile
 
 
@@ -63,5 +83,14 @@ def update_doctor(
     current_user=Depends(require_roles("DOCTOR", "ADMIN")),
 ):
     profile = get_doctor_profile(doctor_id)
-    ensure_resource_owner_or_admin(_extract_user_id(profile), current_user)
+
+    if current_user.get("role") != "ADMIN" and profile["userId"] != str(current_user["_id"]):
+        raise HTTPException(status_code=403, detail="You do not have permission to update this doctor profile")
+
+    if current_user.get("role") != "ADMIN":
+        sanitized_payload = DoctorProfileUpdate(
+            **payload.model_dump(exclude={"approvalStatus"})
+        )
+        return update_doctor_profile(doctor_id, sanitized_payload)
+
     return update_doctor_profile(doctor_id, payload)
