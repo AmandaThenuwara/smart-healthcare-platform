@@ -13,6 +13,7 @@ from app.core.config import (
 )
 from app.db.mongodb import get_payments_collection
 from app.models.payment_model import build_payment_document, serialize_payment
+from app.utils.notification_dispatcher import dispatch_bulk_notifications
 
 VALID_PAYMENT_STATUS_TRANSITIONS = {
     "PENDING": {"PAID", "FAILED"},
@@ -30,6 +31,7 @@ _service_client = MongoClient(
 
 _appointments_collection = _service_client["appointment_db"]["appointments"]
 _doctors_collection = _service_client["doctor_db"]["doctors"]
+_patients_collection = _service_client["patient_db"]["patients"]
 
 
 def ensure_payment_indexes():
@@ -70,6 +72,19 @@ def _get_doctor_or_404(doctor_id: str):
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor profile not found")
     return doctor
+
+
+def _get_patient_or_404(patient_id: str):
+    patient = _patients_collection.find_one(
+        {"_id": _to_object_id(patient_id, "Patient profile not found")}
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+    return patient
+
+
+def _appointment_label(appointment: dict) -> str:
+    return f"{appointment.get('date')} at {appointment.get('timeSlot')}"
 
 
 def _append_appointment_status(appointment: dict, new_status: str):
@@ -123,6 +138,7 @@ def create_payment(payload):
             detail="Payment patient does not match appointment patient",
         )
 
+    patient = _get_patient_or_404(appointment.get("patientId"))
     doctor = _get_doctor_or_404(appointment.get("doctorId"))
     derived_amount = float(doctor.get("consultationFee", payload.amount))
 
@@ -138,7 +154,24 @@ def create_payment(payload):
 
     result = payments.insert_one(document)
     created = payments.find_one({"_id": result.inserted_id})
-    return serialize_payment(created)
+    serialized = serialize_payment(created)
+
+    appointment_text = _appointment_label(appointment)
+    dispatch_bulk_notifications(
+        [
+            {
+                "user_id": patient.get("userId"),
+                "title": "Payment Created",
+                "message": f"A payment record for your appointment with {doctor.get('fullName')} on {appointment_text} has been created. Amount: {derived_amount:.2f} {payload.currency}. Current status: PENDING.",
+                "notification_type": "PAYMENT",
+                "email_to": patient.get("email"),
+                "email_subject": "Payment Created - Smart Healthcare",
+                "email_body": f"Hello {patient.get('fullName')},\n\nA payment record for your appointment with {doctor.get('fullName')} on {appointment_text} has been created.\nAmount: {derived_amount:.2f} {payload.currency}\nCurrent status: PENDING.\n\nRegards,\nSmart Healthcare",
+            }
+        ]
+    )
+
+    return serialized
 
 
 def get_payment_by_appointment(appointment_id: str):
@@ -162,6 +195,10 @@ def update_payment_status(payment_id: str, payload):
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
 
+    appointment = _get_appointment_or_404(payment["appointmentId"])
+    patient = _get_patient_or_404(payment["patientId"])
+    doctor = _get_doctor_or_404(appointment.get("doctorId"))
+
     current_status = payment.get("status")
     new_status = payload.status
 
@@ -184,9 +221,64 @@ def update_payment_status(payment_id: str, payload):
     )
 
     if new_status == "PAID":
-        appointment = _get_appointment_or_404(payment["appointmentId"])
-        if appointment.get("status") == "PAYMENT_PENDING":
-            _append_appointment_status(appointment, "CONFIRMED")
+        refreshed_appointment = _get_appointment_or_404(payment["appointmentId"])
+        if refreshed_appointment.get("status") == "PAYMENT_PENDING":
+            _append_appointment_status(refreshed_appointment, "CONFIRMED")
 
     updated = payments.find_one({"_id": payment["_id"]})
-    return serialize_payment(updated)
+    serialized = serialize_payment(updated)
+
+    if new_status != current_status:
+        appointment_text = _appointment_label(appointment)
+        events = [
+            {
+                "user_id": patient.get("userId"),
+                "title": "Payment Status Updated",
+                "message": f"Your payment for the appointment on {appointment_text} changed from {current_status} to {new_status}.",
+                "notification_type": "PAYMENT",
+                "email_to": patient.get("email"),
+                "email_subject": "Payment Status Updated - Smart Healthcare",
+                "email_body": f"Hello {patient.get('fullName')},\n\nYour payment for the appointment on {appointment_text} changed from {current_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
+            }
+        ]
+
+        if new_status in {"PAID", "REFUNDED"}:
+            events.append(
+                {
+                    "user_id": doctor.get("userId"),
+                    "title": "Payment Status Updated",
+                    "message": f"Payment for the appointment with {patient.get('fullName')} on {appointment_text} is now {new_status}.",
+                    "notification_type": "PAYMENT",
+                    "email_to": doctor.get("email"),
+                    "email_subject": "Payment Status Updated - Smart Healthcare",
+                    "email_body": f"Hello {doctor.get('fullName')},\n\nPayment for the appointment with {patient.get('fullName')} on {appointment_text} is now {new_status}.\n\nRegards,\nSmart Healthcare",
+                }
+            )
+
+        if new_status == "PAID":
+            events.extend(
+                [
+                    {
+                        "user_id": patient.get("userId"),
+                        "title": "Appointment Confirmed",
+                        "message": f"Your appointment with {doctor.get('fullName')} on {appointment_text} is now CONFIRMED.",
+                        "notification_type": "APPOINTMENT",
+                        "email_to": patient.get("email"),
+                        "email_subject": "Appointment Confirmed - Smart Healthcare",
+                        "email_body": f"Hello {patient.get('fullName')},\n\nYour appointment with {doctor.get('fullName')} on {appointment_text} is now CONFIRMED.\n\nRegards,\nSmart Healthcare",
+                    },
+                    {
+                        "user_id": doctor.get("userId"),
+                        "title": "Appointment Confirmed",
+                        "message": f"The appointment with {patient.get('fullName')} on {appointment_text} is now CONFIRMED.",
+                        "notification_type": "APPOINTMENT",
+                        "email_to": doctor.get("email"),
+                        "email_subject": "Appointment Confirmed - Smart Healthcare",
+                        "email_body": f"Hello {doctor.get('fullName')},\n\nThe appointment with {patient.get('fullName')} on {appointment_text} is now CONFIRMED.\n\nRegards,\nSmart Healthcare",
+                    },
+                ]
+            )
+
+        dispatch_bulk_notifications(events)
+
+    return serialized
