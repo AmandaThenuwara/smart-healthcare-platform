@@ -234,7 +234,12 @@ def _apply_payment_status_change(
             appointment = _get_appointment_or_404(payment["appointmentId"])
 
     updated = get_payments_collection().find_one({"_id": payment["_id"]})
-    _dispatch_payment_notifications(updated, appointment, current_status, new_status)
+
+    try:
+        _dispatch_payment_notifications(updated, appointment, current_status, new_status)
+    except Exception as exc:
+        print(f"[stripe-webhook] notification dispatch failed: {exc}")
+
     return serialize_payment(updated)
 
 
@@ -399,6 +404,19 @@ def create_checkout_session(payment_id: str):
     }
 
 
+def _stripe_value(obj, key, default=None):
+    if obj is None:
+        return default
+
+    try:
+        if key in obj:
+            return obj[key]
+    except Exception:
+        return default
+
+    return default
+
+
 def process_stripe_webhook(payload: str, stripe_signature: str | None):
     if not STRIPE_SECRET_KEY:
         raise HTTPException(status_code=503, detail="STRIPE_SECRET_KEY is not configured")
@@ -422,28 +440,34 @@ def process_stripe_webhook(payload: str, stripe_signature: str | None):
     data = event["data"]["object"]
 
     if event_type == "checkout.session.completed":
-        metadata = data.get("metadata") or {}
-        payment_id = metadata.get("paymentId") or data.get("client_reference_id")
+        metadata = _stripe_value(data, "metadata", None)
+        payment_id = _stripe_value(metadata, "paymentId", None) or _stripe_value(
+            data, "client_reference_id", None
+        )
+
         if payment_id:
             payment = _get_payment_or_404(payment_id)
             _apply_payment_status_change(
                 payment,
                 "PAID",
-                stripe_session_id=data.get("id"),
-                stripe_payment_intent_id=data.get("payment_intent"),
+                stripe_session_id=_stripe_value(data, "id", None),
+                stripe_payment_intent_id=_stripe_value(data, "payment_intent", None),
             )
 
     elif event_type == "checkout.session.expired":
-        metadata = data.get("metadata") or {}
-        payment_id = metadata.get("paymentId") or data.get("client_reference_id")
+        metadata = _stripe_value(data, "metadata", None)
+        payment_id = _stripe_value(metadata, "paymentId", None) or _stripe_value(
+            data, "client_reference_id", None
+        )
+
         if payment_id:
             payment = _get_payment_or_404(payment_id)
             if payment.get("status") == "PENDING":
                 _apply_payment_status_change(
                     payment,
                     "FAILED",
-                    stripe_session_id=data.get("id"),
-                    stripe_payment_intent_id=data.get("payment_intent"),
+                    stripe_session_id=_stripe_value(data, "id", None),
+                    stripe_payment_intent_id=_stripe_value(data, "payment_intent", None),
                 )
 
     return {"received": True}
