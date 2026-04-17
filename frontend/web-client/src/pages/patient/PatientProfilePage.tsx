@@ -2,9 +2,21 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type FormEvent,
 } from "react";
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  Users, 
+  ShieldCheck,
+  Save,
+  Loader2,
+  Info,
+  ChevronRight
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import PatientShell from "./PatientShell";
 import {
@@ -89,6 +101,37 @@ function getErrorStatus(error: unknown): number | null {
 
   return null;
 }
+
+const FormField = ({ label, icon: Icon, value, onChange, placeholder, type = "text", required = false, disabled = false, isTextArea = false }: any) => (
+  <div className="space-y-2">
+    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] ml-1">{label}</label>
+    <div className="relative group">
+      <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-300 group-focus-within:text-black transition-colors duration-300">
+        <Icon size={18} />
+      </div>
+      {isTextArea ? (
+        <textarea
+          value={value}
+          onChange={onChange}
+          className="w-full pl-14 pr-5 py-5 bg-gray-50 border border-transparent rounded-[1.5rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all duration-300 outline-none min-h-[160px] resize-none text-black placeholder:text-gray-300 font-medium leading-relaxed"
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          className="w-full pl-14 pr-5 py-5 bg-gray-50 border border-transparent rounded-[1.5rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all duration-300 outline-none disabled:opacity-60 text-black placeholder:text-gray-300 font-semibold"
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled}
+        />
+      )}
+    </div>
+  </div>
+);
 
 export default function PatientProfilePage() {
   const { user } = useAuth();
@@ -196,153 +239,157 @@ export default function PatientProfilePage() {
 
   return (
     <PatientShell
-      title="Patient Profile"
-      subtitle="Your saved patient profile is loaded from the backend whenever you log in."
+      title="Profile"
+      subtitle="Complete your personal information to access all services."
     >
-      <div style={cardStyle}>
+      <div className="card-premium border border-gray-100 p-10">
         {isLoadingProfile ? (
-          <p style={infoTextStyle}>Loading patient profile...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+             <Loader2 className="animate-spin text-black" size={40} />
+             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading patient profile...</p>
+          </div>
         ) : (
-          <form onSubmit={handleSubmit} style={formStyle}>
-            <div style={twoColumnGridStyle}>
-              <div>
-                <label style={labelStyle}>User ID</label>
-                <input
-                  type="text"
-                  value={form.userId}
-                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                  style={inputStyle}
-                  placeholder="user_001"
-                  required
-                  disabled={!!existingPatient || isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  style={inputStyle}
-                  placeholder="patient@example.com"
-                  required
-                  disabled={!!existingPatient || isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Full Name</label>
-                <input
-                  type="text"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  style={inputStyle}
-                  placeholder="John Doe"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Phone</label>
-                <input
-                  type="text"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  style={inputStyle}
-                  placeholder="0771234567"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Date of Birth</label>
-                <input
-                  type="date"
-                  value={form.dateOfBirth}
-                  onChange={(e) =>
-                    setForm({ ...form, dateOfBirth: e.target.value })
-                  }
-                  style={inputStyle}
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Gender</label>
-                <input
-                  type="text"
-                  value={form.gender}
-                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                  style={inputStyle}
-                  placeholder="Male"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Emergency Contact Name</label>
-                <input
-                  type="text"
-                  value={form.emergencyContactName}
-                  onChange={(e) =>
-                    setForm({ ...form, emergencyContactName: e.target.value })
-                  }
-                  style={inputStyle}
-                  placeholder="Jane Doe"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Emergency Contact Phone</label>
-                <input
-                  type="text"
-                  value={form.emergencyContactPhone}
-                  onChange={(e) =>
-                    setForm({ ...form, emergencyContactPhone: e.target.value })
-                  }
-                  style={inputStyle}
-                  placeholder="0777654321"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-10 animate-in fade-in duration-500">
+            {/* Form Section Header */}
+            <div className="flex items-center justify-between pb-6 border-b border-gray-50">
+               <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center shadow-lg">
+                     <User size={22} />
+                  </div>
+                  <div>
+                     <h3 className="text-lg font-bold uppercase tracking-tight">Personal Information</h3>
+                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Global health profile records</p>
+                  </div>
+               </div>
+               <div className="hidden sm:block">
+                  <ChevronRight className="text-gray-200" size={24} />
+               </div>
             </div>
 
-            <div style={{ marginTop: "16px" }}>
-              <label style={labelStyle}>Address</label>
-              <textarea
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                style={textareaStyle}
-                placeholder="123 Main Street, Colombo"
-                required
-                disabled={isSubmitting}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+              <FormField 
+                label="User ID" 
+                icon={ShieldCheck} 
+                value={form.userId} 
+                onChange={(e: any) => setForm({ ...form, userId: e.target.value })} 
+                placeholder="user_001" 
+                required 
+                disabled={!!existingPatient || isSubmitting} 
+              />
+
+              <FormField 
+                label="Email" 
+                icon={Mail} 
+                value={form.email} 
+                onChange={(e: any) => setForm({ ...form, email: e.target.value })} 
+                placeholder="patient@example.com" 
+                required 
+                disabled={!!existingPatient || isSubmitting} 
+              />
+
+              <FormField 
+                label="Full Name" 
+                icon={User} 
+                value={form.fullName} 
+                onChange={(e: any) => setForm({ ...form, fullName: e.target.value })} 
+                placeholder="John Doe" 
+                required 
+                disabled={isSubmitting} 
+              />
+
+              <FormField 
+                label="Phone" 
+                icon={Phone} 
+                value={form.phone} 
+                onChange={(e: any) => setForm({ ...form, phone: e.target.value })} 
+                placeholder="+94 7X XXX XXXX" 
+                required 
+                disabled={isSubmitting} 
+              />
+
+              <FormField 
+                label="Date of Birth" 
+                icon={Calendar} 
+                type="date"
+                value={form.dateOfBirth} 
+                onChange={(e: any) => setForm({ ...form, dateOfBirth: e.target.value })} 
+                required 
+                disabled={isSubmitting} 
+              />
+
+              <FormField 
+                label="Gender" 
+                icon={Users} 
+                value={form.gender} 
+                onChange={(e: any) => setForm({ ...form, gender: e.target.value })} 
+                placeholder="Specify gender" 
+                required 
+                disabled={isSubmitting} 
+              />
+
+              <FormField 
+                label="Emergency Contact Name" 
+                icon={User} 
+                value={form.emergencyContactName} 
+                onChange={(e: any) => setForm({ ...form, emergencyContactName: e.target.value })} 
+                placeholder="Contact name" 
+                required 
+                disabled={isSubmitting} 
+              />
+
+              <FormField 
+                label="Emergency Contact Phone" 
+                icon={Phone} 
+                value={form.emergencyContactPhone} 
+                onChange={(e: any) => setForm({ ...form, emergencyContactPhone: e.target.value })} 
+                placeholder="Contact phone" 
+                required 
+                disabled={isSubmitting} 
               />
             </div>
 
-            {existingPatient && (
-              <div style={infoBoxStyle}>
-                <strong>Current patientId:</strong> {existingPatient.patientId}
+            <FormField 
+              label="Address" 
+              icon={MapPin} 
+              isTextArea 
+              value={form.address} 
+              onChange={(e: any) => setForm({ ...form, address: e.target.value })} 
+              placeholder="Full registered address" 
+              required 
+              disabled={isSubmitting} 
+            />
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-8 pt-8 border-t border-gray-50">
+              <div className="flex-1 w-full text-center sm:text-left">
+                {existingPatient && (
+                  <div className="inline-flex items-center gap-3 px-5 py-3 bg-gray-50 text-black rounded-2xl text-[10px] font-bold uppercase tracking-widest border border-gray-100 shadow-sm">
+                    <Info size={14} className="text-gray-400" />
+                    <span>ID: <code className="bg-white px-2 py-0.5 rounded text-gray-600">{existingPatient.patientId}</code></span>
+                  </div>
+                )}
+                
+                {error && <p className="mt-4 text-xs font-bold text-black uppercase tracking-widest flex items-center justify-center sm:justify-start gap-3"><span className="w-2 h-2 rounded-full bg-black animate-pulse"></span> {error}</p>}
+                {message && <p className="mt-4 text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center justify-center sm:justify-start gap-3"><CheckCircleIcon size={14} /> {message}</p>}
               </div>
-            )}
 
-            {error && <p style={errorStyle}>{error}</p>}
-            {message && <p style={successStyle}>{message}</p>}
-
-            <button type="submit" style={buttonStyle} disabled={isSubmitting}>
-              {isSubmitting
-                ? "Saving..."
-                : existingPatient
-                ? "Update Patient Profile"
-                : "Create Patient Profile"}
-            </button>
+              <button 
+                type="submit" 
+                className="btn-primary w-full sm:w-auto flex items-center justify-center gap-4 py-5 shadow-2xl shadow-black/10 disabled:opacity-30 disabled:grayscale transition-all" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={22} className="animate-spin" />
+                    <span className="uppercase tracking-widest text-xs">Requesting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={20} />
+                    <span className="uppercase tracking-widest text-xs font-bold">{existingPatient ? "Save Changes" : "Initialize Profile"}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>
@@ -350,84 +397,6 @@ export default function PatientProfilePage() {
   );
 }
 
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const formStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-};
-
-const twoColumnGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-  color: "#111827",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  boxSizing: "border-box",
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: "120px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  resize: "vertical",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  marginTop: "18px",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-  alignSelf: "flex-start",
-};
-
-const infoBoxStyle: CSSProperties = {
-  marginTop: "16px",
-  padding: "12px 14px",
-  background: "#eff6ff",
-  color: "#1e3a8a",
-  borderRadius: "10px",
-};
-
-const infoTextStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const errorStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#16a34a",
-};
+function CheckCircleIcon({ size }: { size: number }) {
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+}

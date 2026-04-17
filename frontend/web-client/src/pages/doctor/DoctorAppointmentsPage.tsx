@@ -1,5 +1,21 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { 
+  User, 
+  Calendar, 
+  Clock, 
+  Hash, 
+  RefreshCw,
+  MoreVertical,
+  CheckCircle2,
+  Clock3,
+  XCircle,
+  AlertCircle,
+  History,
+  ChevronRight,
+  ShieldCheck,
+  Briefcase
+} from "lucide-react";
 import DoctorShell from "./DoctorShell";
 import { getStoredDoctorProfile } from "../../api/doctorApi";
 import {
@@ -25,6 +41,22 @@ function sortAppointments(data: Appointment[]) {
     return first.localeCompare(second);
   });
 }
+
+const getStatusStyles = (status: AppointmentStatus) => {
+  switch (status) {
+    case 'CONFIRMED':
+    case 'COMPLETED':
+      return 'bg-black text-white border-black';
+    case 'PENDING':
+    case 'PAYMENT_PENDING':
+      return 'bg-gray-100 text-gray-500 border-gray-200';
+    case 'REJECTED':
+    case 'CANCELLED':
+      return 'bg-gray-50 text-gray-400 border-gray-200 line-through';
+    default:
+      return 'bg-white text-black border-gray-100 shadow-sm';
+  }
+};
 
 export default function DoctorAppointmentsPage() {
   const [doctorId, setDoctorId] = useState("");
@@ -64,7 +96,7 @@ export default function DoctorAppointmentsPage() {
       setPendingStatuses(nextStatuses);
     } catch (error) {
       console.error(error);
-      setError("Failed to load doctor appointments");
+      setError("Failed to load clinical appointments");
     } finally {
       setIsLoading(false);
     }
@@ -94,299 +126,166 @@ export default function DoctorAppointmentsPage() {
         [appointmentId]: updated.status,
       }));
 
-      setMessage(`Appointment ${appointmentId} updated to ${updated.status}.`);
+      setMessage(`Success: Appointment state migrated to ${updated.status}.`);
     } catch (error) {
       console.error(error);
-      setError(`Failed to update appointment ${appointmentId}`);
+      setError(`Error: Failed to synchronize state for ${appointmentId}`);
     }
   }
 
   return (
     <DoctorShell
-      title="Doctor Appointments"
-      subtitle="Track appointments, view status history, and update the current status."
+      title="Appointment Queue"
+      subtitle="View and manage patient visitation requests and consultation lifecycle."
     >
       {!doctorId ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Doctor Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the doctor profile first so the frontend knows which
-            doctor appointments to load.
-          </p>
-          <Link to="/doctor/profile" style={linkButtonStyle}>
-            Go to Doctor Profile
-          </Link>
+        <div className="card-premium text-center py-20 bg-white border border-gray-100 animate-in zoom-in duration-500">
+           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300 mb-6">
+              <Calendar size={32} />
+           </div>
+           <h2 className="text-xl font-bold uppercase tracking-tight">Identity Required</h2>
+           <p className="text-gray-500 max-w-sm mx-auto text-sm mt-2">Initialize your doctor profile to access the appointment management system.</p>
+           <Link to="/doctor/profile" className="btn-primary mt-8 inline-flex px-8 py-4 text-xs font-bold uppercase tracking-widest">Setup Profile</Link>
         </div>
       ) : (
-        <div style={cardStyle}>
-          <div style={headerRowStyle}>
-            <h2 style={sectionTitleStyle}>Appointments</h2>
-            <button onClick={() => void loadAppointments(doctorId)} style={secondaryButtonStyle}>
-              Refresh
-            </button>
+        <div className="space-y-8 animate-in fade-in duration-700">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+             <div className="flex items-center gap-4">
+                <div className="px-4 py-2 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl">
+                   {appointments.length} Total Records
+                </div>
+                <div className="px-4 py-2 bg-white text-black border border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm">
+                   {appointments.filter(a => a.status === 'PENDING').length} Pending
+                </div>
+             </div>
+             
+             <button onClick={() => void loadAppointments(doctorId)} className="p-3 bg-white rounded-xl shadow-premium text-gray-400 hover:text-black transition-all border border-gray-50 self-end sm:self-auto group">
+                <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-700" />
+             </button>
           </div>
 
-          {error && <p style={errorStyle}>{error}</p>}
-          {message && <p style={successStyle}>{message}</p>}
+          {(error || message) && (
+             <div className="animate-in slide-in-from-top-4 duration-300">
+                {error && <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-black font-bold text-[10px] uppercase tracking-widest flex items-center gap-3"><AlertCircle size={14} /> {error}</div>}
+                {message && <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 font-bold text-[10px] uppercase tracking-widest flex items-center gap-3"><CheckCircle2 size={14} /> {message}</div>}
+             </div>
+          )}
 
           {isLoading ? (
-            <p style={textStyle}>Loading appointments...</p>
+             <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-12 h-12 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Filtering queue...</p>
+             </div>
           ) : appointments.length === 0 ? (
-            <p style={textStyle}>No appointments found for this doctor.</p>
+             <div className="text-center py-32 bg-white border border-dashed border-gray-200 rounded-[3rem]">
+                <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px]">Circular queue empty</p>
+             </div>
           ) : (
-            <div style={appointmentsWrapperStyle}>
-              {appointments.map((appointment) => (
-                <div key={appointment.appointmentId} style={appointmentCardStyle}>
-                  <div style={appointmentTopStyle}>
-                    <div>
-                      <h3 style={appointmentTitleStyle}>
-                        Appointment #{appointment.appointmentId}
-                      </h3>
-                      <p style={metaTextStyle}>
-                        <strong>Patient ID:</strong> {appointment.patientId}
-                      </p>
-                      <p style={metaTextStyle}>
-                        <strong>Date:</strong> {appointment.date}
-                      </p>
-                      <p style={metaTextStyle}>
-                        <strong>Time Slot:</strong> {appointment.timeSlot}
-                      </p>
-                      <p style={metaTextStyle}>
-                        <strong>Consultation Type:</strong>{" "}
-                        {appointment.consultationType}
-                      </p>
-                      <p style={metaTextStyle}>
-                        <strong>Reason:</strong> {appointment.reason}
-                      </p>
-                    </div>
-
-                    <div style={statusBoxStyle}>
-                      <p style={statusLabelStyle}>Current Status</p>
-                      <div style={statusBadgeStyle}>{appointment.status}</div>
-                    </div>
-                  </div>
-
-                  <div style={updateRowStyle}>
-                    <select
-                      value={
-                        pendingStatuses[appointment.appointmentId] || appointment.status
-                      }
-                      onChange={(e) =>
-                        setPendingStatuses((prev) => ({
-                          ...prev,
-                          [appointment.appointmentId]:
-                            e.target.value as AppointmentStatus,
-                        }))
-                      }
-                      style={selectStyle}
-                    >
-                      {APPOINTMENT_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-
-                    <button
-                      onClick={() => void handleStatusUpdate(appointment.appointmentId)}
-                      style={buttonStyle}
-                    >
-                      Update Status
-                    </button>
-                  </div>
-
-                  <div style={historySectionStyle}>
-                    <h4 style={historyTitleStyle}>Status History</h4>
-                    {appointment.statusHistory.length === 0 ? (
-                      <p style={textStyle}>No status history available.</p>
-                    ) : (
-                      <div style={historyListStyle}>
-                        {appointment.statusHistory.map((historyItem, index) => (
-                          <div
-                            key={`${appointment.appointmentId}-${historyItem.changedAt}-${index}`}
-                            style={historyItemStyle}
-                          >
-                            <div style={historyStatusStyle}>{historyItem.status}</div>
-                            <div style={historyDateStyle}>
-                              {new Date(historyItem.changedAt).toLocaleString()}
+             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {appointments.map((appointment) => (
+                   <div key={appointment.appointmentId} className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-premium overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-500">
+                      {/* Top Header */}
+                      <div className="p-8 pb-4 flex items-start justify-between">
+                         <div className="flex gap-5">
+                            <div className="w-16 h-16 bg-gray-50 rounded-[1.5rem] flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all duration-500 shadow-inner shrink-0">
+                               <User size={28} />
                             </div>
-                          </div>
-                        ))}
+                            <div className="overflow-hidden">
+                               <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Record #</span>
+                                  <span className="text-[10px] font-bold text-black border-b border-black leading-none">{appointment.appointmentId.slice(-8)}</span>
+                               </div>
+                               <h3 className="text-lg font-bold truncate uppercase tracking-tight">Patient {appointment.patientId.slice(-6)}</h3>
+                               <p className="text-[11px] font-medium text-gray-500 break-words mt-1 line-clamp-1">{appointment.reason}</p>
+                            </div>
+                         </div>
+                         <div className={`px-4 py-2 rounded-2xl border text-[10px] font-bold uppercase tracking-widest transition-all ${getStatusStyles(appointment.status)}`}>
+                            {appointment.status}
+                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+
+                      {/* Details Grid */}
+                      <div className="px-8 py-6 grid grid-cols-2 gap-6 bg-gray-50/30">
+                         <div className="flex items-center gap-3">
+                            <Calendar size={16} className="text-gray-300" />
+                            <div>
+                               <p className="text-[9px] uppercase font-bold text-gray-400 tracking-widest leading-none">Date</p>
+                               <p className="text-xs font-bold text-black mt-1">{appointment.date}</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <Clock size={16} className="text-gray-300" />
+                            <div>
+                               <p className="text-[9px] uppercase font-bold text-gray-400 tracking-widest leading-none">Slot</p>
+                               <p className="text-xs font-bold text-black mt-1">{appointment.timeSlot}</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <Briefcase size={16} className="text-gray-300" />
+                            <div>
+                               <p className="text-[9px] uppercase font-bold text-gray-400 tracking-widest leading-none">Modality</p>
+                               <p className="text-xs font-bold text-black mt-1">{appointment.consultationType}</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <ShieldCheck size={16} className="text-gray-300" />
+                            <div>
+                               <p className="text-[9px] uppercase font-bold text-gray-400 tracking-widest leading-none">Security</p>
+                               <p className="text-xs font-bold text-black mt-1">Verified</p>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Update Section */}
+                      <div className="p-8 flex flex-col sm:flex-row gap-4">
+                         <div className="relative flex-1 group/sel">
+                            <select
+                               value={pendingStatuses[appointment.appointmentId] || appointment.status}
+                               onChange={(e) => setPendingStatuses((prev) => ({
+                                  ...prev,
+                                  [appointment.appointmentId]: e.target.value as AppointmentStatus,
+                               }))}
+                               className="w-full pl-6 pr-10 py-4 bg-gray-50 border border-transparent rounded-[1.25rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer outline-none"
+                            >
+                               {APPOINTMENT_STATUSES.map((status) => (
+                                  <option key={status} value={status}>{status}</option>
+                               ))}
+                            </select>
+                            <ChevronRight size={14} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 rotate-90" />
+                         </div>
+                         <button
+                            onClick={() => void handleStatusUpdate(appointment.appointmentId)}
+                            className="bg-black text-white px-8 py-4 rounded-[1.25rem] text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-black/10 hover:shadow-2xl transition-all shrink-0"
+                         >
+                            Update State
+                         </button>
+                      </div>
+
+                      {/* History Log */}
+                      <div className="border-t border-gray-50 p-8 pt-6">
+                         <div className="flex items-center gap-2 mb-4">
+                            <History size={14} className="text-gray-300" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Migration Logic History</span>
+                         </div>
+                         <div className="space-y-3">
+                            {appointment.statusHistory.length === 0 ? (
+                               <p className="text-[10px] text-gray-300 italic">No historical data found for this record</p>
+                            ) : (
+                               appointment.statusHistory.slice(-2).reverse().map((historyItem, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50/50 rounded-xl border border-gray-50/50">
+                                     <span className="text-[10px] font-bold uppercase tracking-tight">{historyItem.status}</span>
+                                     <span className="text-[9px] text-gray-400 font-medium uppercase">{new Date(historyItem.changedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {new Date(historyItem.changedAt).toLocaleDateString()}</span>
+                                  </div>
+                               ))
+                            )}
+                         </div>
+                      </div>
+                   </div>
+                ))}
+             </div>
           )}
         </div>
       )}
     </DoctorShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const linkButtonStyle: CSSProperties = {
-  display: "inline-block",
-  marginTop: "16px",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  marginBottom: "10px",
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  marginBottom: "10px",
-  color: "#16a34a",
-};
-
-const appointmentsWrapperStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "18px",
-};
-
-const appointmentCardStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "20px",
-  background: "#fcfcfd",
-};
-
-const appointmentTopStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "20px",
-  flexWrap: "wrap",
-};
-
-const appointmentTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "12px",
-};
-
-const metaTextStyle: CSSProperties = {
-  margin: "6px 0",
-  color: "#374151",
-};
-
-const statusBoxStyle: CSSProperties = {
-  minWidth: "180px",
-};
-
-const statusLabelStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "8px",
-  color: "#6b7280",
-  fontSize: "13px",
-};
-
-const statusBadgeStyle: CSSProperties = {
-  display: "inline-block",
-  padding: "8px 12px",
-  borderRadius: "999px",
-  background: "#dbeafe",
-  color: "#1e3a8a",
-  fontWeight: 700,
-};
-
-const updateRowStyle: CSSProperties = {
-  display: "flex",
-  gap: "12px",
-  marginTop: "18px",
-  flexWrap: "wrap",
-};
-
-const selectStyle: CSSProperties = {
-  minWidth: "220px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const historySectionStyle: CSSProperties = {
-  marginTop: "18px",
-};
-
-const historyTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "10px",
-};
-
-const historyListStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-};
-
-const historyItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "12px",
-  padding: "12px 14px",
-  borderRadius: "10px",
-  background: "#f9fafb",
-  border: "1px solid #e5e7eb",
-  flexWrap: "wrap",
-};
-
-const historyStatusStyle: CSSProperties = {
-  fontWeight: 700,
-  color: "#111827",
-};
-
-const historyDateStyle: CSSProperties = {
-  color: "#4b5563",
-};

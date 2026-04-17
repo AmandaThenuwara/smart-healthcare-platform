@@ -1,5 +1,19 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { 
+  Clock, 
+  Calendar, 
+  Plus, 
+  Trash2, 
+  RefreshCw,
+  Info,
+  ChevronRight,
+  Edit2,
+  AlertCircle,
+  X,
+  Save,
+  Loader2
+} from "lucide-react";
 import DoctorShell from "./DoctorShell";
 import {
   createAvailabilitySlot,
@@ -17,6 +31,38 @@ function sortSlots(slots: AvailabilitySlot[]) {
     return first.localeCompare(second);
   });
 }
+
+const FormField = ({ label, icon: Icon, value, onChange, placeholder, type = "text", required = false, isSelect = false, options = [] }: any) => (
+  <div className="space-y-2">
+    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] ml-1">{label}</label>
+    <div className="relative group">
+      <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-300 group-focus-within:text-black transition-colors duration-300">
+        <Icon size={18} />
+      </div>
+      {isSelect ? (
+        <select
+          value={value}
+          onChange={onChange}
+          className="w-full pl-14 pr-5 py-4 bg-gray-50 border border-transparent rounded-[1.25rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all duration-300 outline-none text-black font-bold appearance-none cursor-pointer"
+          required={required}
+        >
+          {options.map((opt: any) => (
+             <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          className="w-full pl-14 pr-5 py-4 bg-gray-50 border border-transparent rounded-[1.25rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all duration-300 outline-none text-black placeholder:text-gray-300 font-semibold"
+          placeholder={placeholder}
+          required={required}
+        />
+      )}
+    </div>
+  </div>
+);
 
 export default function DoctorAvailabilityPage() {
   const [doctorId, setDoctorId] = useState("");
@@ -129,7 +175,7 @@ export default function DoctorAvailabilityPage() {
           endTime: form.endTime,
           isAvailable: form.isAvailable,
         });
-        setMessage("Availability slot updated successfully.");
+        setMessage("Slot updated successfully.");
       } else {
         await createAvailabilitySlot({
           doctorId,
@@ -138,7 +184,7 @@ export default function DoctorAvailabilityPage() {
           endTime: form.endTime,
           isAvailable: form.isAvailable,
         });
-        setMessage("Availability slot created successfully.");
+        setMessage("Slot created successfully.");
       }
 
       resetForm();
@@ -157,300 +203,174 @@ export default function DoctorAvailabilityPage() {
 
   return (
     <DoctorShell
-      title="Doctor Availability"
-      subtitle="Create, edit, and delete consultation slots. Overlapping slots are blocked by the backend."
+      title="Consultation Slots"
+      subtitle="Define your available time windows for patient consultations."
     >
       {!doctorId ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Doctor Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the doctor profile first so the frontend has a saved
-            doctorId to use.
-          </p>
-          <Link to="/doctor/profile" style={linkButtonStyle}>
-            Go to Doctor Profile
-          </Link>
+        <div className="card-premium text-center py-16 space-y-6 animate-in zoom-in duration-500 border border-gray-100">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-400">
+            <Clock size={32} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold uppercase tracking-tight">Professional Setup Required</h2>
+            <p className="text-gray-500 max-w-md mx-auto text-sm">
+              Please initialize your doctor profile before managing availability slots.
+            </p>
+          </div>
+          <div className="pt-4">
+            <Link to="/doctor/profile" className="btn-primary inline-flex items-center gap-2 group text-xs">
+              Go to Profile
+              <Plus size={16} className="group-hover:rotate-90 transition-transform" />
+            </Link>
+          </div>
         </div>
       ) : (
-        <>
-          <div style={cardStyle}>
-            <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>
-                {editingSlotId ? "Edit Availability Slot" : "Create Availability Slot"}
-              </h2>
-
-              {editingSlotId && (
-                <button onClick={resetForm} style={secondaryButtonStyle} type="button">
-                  Cancel Edit
-                </button>
-              )}
+        <div className="space-y-8 animate-in fade-in duration-500">
+          {/* Create/Edit Form Card */}
+          <div className="card-premium border border-gray-100 p-10">
+            <div className="flex items-center justify-between pb-6 border-b border-gray-50 mb-8">
+               <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center shadow-lg">
+                     {editingSlotId ? <Edit2 size={22} /> : <Plus size={22} />}
+                  </div>
+                  <div>
+                     <h3 className="text-lg font-bold uppercase tracking-tight">
+                        {editingSlotId ? "Edit Slot" : "Add New Slot"}
+                     </h3>
+                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Consultation time management</p>
+                  </div>
+               </div>
+               {editingSlotId && (
+                  <button onClick={resetForm} className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors font-bold uppercase text-[10px] tracking-widest">
+                    <X size={16} /> Cancel Edit
+                  </button>
+               )}
             </div>
 
-            <form onSubmit={handleSubmit} style={formGridStyle}>
-              <div>
-                <label style={labelStyle}>Date</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+              <FormField 
+                label="Date" 
+                icon={Calendar} 
+                type="date"
+                value={form.date} 
+                onChange={(e: any) => setForm({ ...form, date: e.target.value })} 
+                required 
+              />
+              <FormField 
+                label="Start Time" 
+                icon={Clock} 
+                type="time"
+                value={form.startTime} 
+                onChange={(e: any) => setForm({ ...form, startTime: e.target.value })} 
+                required 
+              />
+              <FormField 
+                label="End Time" 
+                icon={Clock} 
+                type="time"
+                value={form.endTime} 
+                onChange={(e: any) => setForm({ ...form, endTime: e.target.value })} 
+                required 
+              />
+              <FormField 
+                label="Visibility" 
+                icon={Info} 
+                isSelect
+                options={[
+                   { value: "true", label: "Available" },
+                   { value: "false", label: "Booked/Away" }
+                ]}
+                value={String(form.isAvailable)} 
+                onChange={(e: any) => setForm({ ...form, isAvailable: e.target.value === "true" })} 
+              />
 
-              <div>
-                <label style={labelStyle}>Start Time</label>
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) =>
-                    setForm({ ...form, startTime: e.target.value })
-                  }
-                  style={inputStyle}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>End Time</label>
-                <input
-                  type="time"
-                  value={form.endTime}
-                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Availability</label>
-                <select
-                  value={String(form.isAvailable)}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      isAvailable: e.target.value === "true",
-                    })
-                  }
-                  style={inputStyle}
+              <div className="md:col-span-4 flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-50 mt-4 gap-6">
+                <div className="flex flex-col gap-1">
+                   {error && <p className="text-[10px] font-bold text-black uppercase tracking-widest flex items-center gap-2"><div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" /> {error}</p>}
+                   {message && <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> {message}</p>}
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="btn-primary w-full sm:w-auto flex items-center justify-center gap-4 py-4 px-10 shadow-xl shadow-black/10 disabled:opacity-30 transition-all font-bold uppercase text-[10px] tracking-widest" 
+                  disabled={isSaving}
                 >
-                  <option value="true">Available</option>
-                  <option value="false">Unavailable</option>
-                </select>
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                {error && <p style={errorStyle}>{error}</p>}
-                {message && <p style={successStyle}>{message}</p>}
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle} disabled={isSaving}>
-                  {isSaving
-                    ? "Saving..."
-                    : editingSlotId
-                    ? "Update Availability Slot"
-                    : "Add Availability Slot"}
+                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : editingSlotId ? <Save size={18} /> : <Plus size={18} />}
+                  {isSaving ? "Saving..." : editingSlotId ? "Update Slot" : "Create Slot"}
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: "20px" }}>
-            <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>Existing Slots</h2>
-              <button onClick={() => void loadSlots(doctorId)} style={secondaryButtonStyle}>
-                Refresh
+          {/* List Card */}
+          <div className="card-premium border border-gray-100 p-10">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-bold uppercase tracking-tighter">Your Schedule</h2>
+                <div className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                   {slots.length} Total Slots
+                </div>
+              </div>
+              <button onClick={() => void loadSlots(doctorId)} className="p-3 bg-white rounded-xl shadow-premium text-gray-400 hover:text-black transition-all border border-gray-50 group">
+                <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-700" />
               </button>
             </div>
 
             {isLoading ? (
-              <p style={textStyle}>Loading slots...</p>
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                 <Loader2 className="animate-spin text-black" size={32} />
+                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Syncing schedule...</p>
+              </div>
             ) : slots.length === 0 ? (
-              <p style={textStyle}>No availability slots found yet.</p>
+              <div className="text-center py-20 bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">
+                 <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px]">No slots found</p>
+              </div>
             ) : (
-              <div style={tableWrapperStyle}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Date</th>
-                      <th style={thStyle}>Start</th>
-                      <th style={thStyle}>End</th>
-                      <th style={thStyle}>Status</th>
-                      <th style={thStyle}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slots.map((slot) => (
-                      <tr key={slot.slotId}>
-                        <td style={tdStyle}>{slot.date}</td>
-                        <td style={tdStyle}>{slot.startTime}</td>
-                        <td style={tdStyle}>{slot.endTime}</td>
-                        <td style={tdStyle}>
-                          {slot.isAvailable ? "Available" : "Unavailable"}
-                        </td>
-                        <td style={tdStyle}>
-                          <div style={actionCellStyle}>
-                            <button
-                              type="button"
-                              style={editButtonStyle}
-                              onClick={() => handleEdit(slot)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              style={deleteButtonStyle}
-                              onClick={() => void handleDelete(slot.slotId)}
-                            >
-                              Delete
-                            </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {slots.map((slot) => (
+                    <div key={slot.slotId} className="group bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                       <div className="flex items-center justify-between mb-6">
+                          <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${slot.isAvailable ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
+                             {slot.isAvailable ? 'Available' : 'Unavailable'}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <div className="flex items-center gap-1">
+                             <button onClick={() => handleEdit(slot)} className="p-2.5 text-gray-300 hover:text-black hover:bg-gray-50 rounded-xl transition-all">
+                                <Edit2 size={16} />
+                             </button>
+                             <button onClick={() => void handleDelete(slot.slotId)} className="p-2.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                                <Trash2 size={16} />
+                             </button>
+                          </div>
+                       </div>
+                       
+                       <div className="space-y-4">
+                          <div className="flex items-center gap-4">
+                             <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform">
+                                <Calendar size={18} />
+                             </div>
+                             <div>
+                                <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Consultation Date</p>
+                                <p className="font-bold text-sm">{new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                             </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                             <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform">
+                                <Clock size={18} />
+                             </div>
+                             <div>
+                                <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Time Window</p>
+                                <p className="font-bold text-sm tracking-tight">{slot.startTime} — {slot.endTime}</p>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                 ))}
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </DoctorShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const linkButtonStyle: CSSProperties = {
-  display: "inline-block",
-  marginTop: "16px",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const editButtonStyle: CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#dbeafe",
-  color: "#1e3a8a",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const deleteButtonStyle: CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#fee2e2",
-  color: "#991b1b",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const tableWrapperStyle: CSSProperties = {
-  overflowX: "auto",
-};
-
-const tableStyle: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-};
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "12px",
-  background: "#f9fafb",
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle: CSSProperties = {
-  padding: "12px",
-  borderBottom: "1px solid #e5e7eb",
-  verticalAlign: "top",
-};
-
-const actionCellStyle: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  flexWrap: "wrap",
-};
