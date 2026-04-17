@@ -110,18 +110,43 @@ export default function DoctorProfilePage() {
     event.preventDefault();
     setError("");
     setMessage("");
+
+    // --- Validations ---
+    if (form.fullName.trim().length < 3) {
+      setError("Full name must be at least 3 characters long.");
+      return;
+    }
+
+    if (form.specialty.trim().length < 3) {
+      setError("Please specify a valid medical specialty.");
+      return;
+    }
+
+    if (form.qualifications.trim().length < 2) {
+      setError("Please enter your medical qualifications.");
+      return;
+    }
+
+    if (form.hospital.trim().length < 3) {
+      setError("Please specify your primary hospital or clinic.");
+      return;
+    }
+
+    const consultationFee = Number(form.consultationFee);
+    if (Number.isNaN(consultationFee) || consultationFee < 100) {
+      setError("Consultation fee must be a valid amount (minimum 100 LKR).");
+      return;
+    }
+
+    if (form.bio.trim().length < 20) {
+      setError("Professional bio should be at least 20 characters long.");
+      return;
+    }
+    // -------------------
+
     setIsSubmitting(true);
 
     try {
-      if (!form.consultationFee.trim()) {
-        throw new Error("Consultation fee is required");
-      }
-
-      const consultationFee = Number(form.consultationFee);
-      if (Number.isNaN(consultationFee)) {
-        throw new Error("Consultation fee must be a valid number");
-      }
-
       if (!existingDoctor) {
         const createdDoctor = await createDoctorProfile({
           userId: form.userId.trim(),

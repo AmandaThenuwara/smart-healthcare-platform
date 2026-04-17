@@ -67,7 +67,22 @@ export default function PatientSymptomCheckerPage() {
       .filter(Boolean);
 
     if (symptoms.length === 0) {
-      setError("Enter at least one symptom.");
+      setError("Please describe your symptoms.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (age) {
+      const ageNum = Number(age);
+      if (ageNum < 1 || ageNum > 120) {
+        setError("Please enter a valid age between 1 and 120.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (symptomsInput.trim().length < 5) {
+      setError("Please provide a more detailed description of your symptoms.");
       setIsSubmitting(false);
       return;
     }

@@ -77,6 +77,21 @@ export default function PatientReportsPage() {
       return;
     }
 
+    if (form.title.trim().length < 3) {
+      setError("Report title must be at least 3 characters long.");
+      return;
+    }
+
+    if (form.reportType.trim().length < 2) {
+      setError("Please specify the report type.");
+      return;
+    }
+
+    if (!form.fileUrl.trim().startsWith("http") && !form.fileUrl.trim().startsWith("/")) {
+       setError("Please enter a valid File URL or path.");
+       return;
+    }
+
     try {
       await createMedicalReport({
         patientId,

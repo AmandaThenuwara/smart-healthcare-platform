@@ -108,6 +108,40 @@ export default function PatientProfilePage() {
     event.preventDefault();
     setError("");
     setMessage("");
+
+    // --- Validations ---
+    const phoneRegex = /^[0-9]{10}$/;
+    
+    if (form.fullName.trim().length < 3) {
+      setError("Full name must be at least 3 characters long.");
+      return;
+    }
+
+    if (!phoneRegex.test(form.phone.trim())) {
+      setError("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
+    if (form.dateOfBirth) {
+      const selectedDate = new Date(form.dateOfBirth);
+      const today = new Date();
+      if (selectedDate > today) {
+        setError("Date of birth cannot be in the future.");
+        return;
+      }
+    }
+
+    if (form.address.trim().length < 5) {
+      setError("Please enter a complete address.");
+      return;
+    }
+
+    if (!phoneRegex.test(form.emergencyContactPhone.trim())) {
+      setError("Emergency contact must be a valid 10-digit phone number.");
+      return;
+    }
+    // -------------------
+
     setIsSubmitting(true);
 
     try {

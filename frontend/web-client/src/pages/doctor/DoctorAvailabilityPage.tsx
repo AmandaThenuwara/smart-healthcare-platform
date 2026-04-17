@@ -78,6 +78,21 @@ export default function DoctorAvailabilityPage() {
       return;
     }
 
+    if (!form.date) {
+      setError("Please select a date for the session.");
+      return;
+    }
+
+    const selectedDate = new Date(form.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Allow creating slots for today onwards
+    if (selectedDate < today) {
+      setError("Cannot schedule sessions in the past.");
+      return;
+    }
+
     if (form.startTime >= form.endTime) {
       setError("End time must be later than start time.");
       return;
