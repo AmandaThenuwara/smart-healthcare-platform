@@ -47,7 +47,7 @@ export default function DoctorDashboardPage() {
   return (
     <DoctorShell
       title="Doctor Dashboard"
-      subtitle="Manage your doctor profile, availability, and appointment workflow."
+      subtitle="Manage your profile, maintain your availability, and handle appointment requests."
     >
       {!doctorId ? (
         <div style={cardStyle}>

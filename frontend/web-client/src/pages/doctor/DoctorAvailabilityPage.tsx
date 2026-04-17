@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import DoctorShell from "./DoctorShell";
 import {
   createAvailabilitySlot,
+  deleteAvailabilitySlot,
   getAvailabilitySlots,
   getStoredDoctorProfile,
+  updateAvailabilitySlot,
 } from "../../api/doctorApi";
 import type { AvailabilitySlot } from "../../types/doctor";
 
@@ -19,7 +21,9 @@ function sortSlots(slots: AvailabilitySlot[]) {
 export default function DoctorAvailabilityPage() {
   const [doctorId, setDoctorId] = useState("");
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -57,6 +61,49 @@ export default function DoctorAvailabilityPage() {
     }
   }
 
+  function resetForm() {
+    setEditingSlotId(null);
+    setForm({
+      date: "",
+      startTime: "09:00",
+      endTime: "10:00",
+      isAvailable: true,
+    });
+  }
+
+  function handleEdit(slot: AvailabilitySlot) {
+    setEditingSlotId(slot.slotId);
+    setForm({
+      date: slot.date,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      isAvailable: slot.isAvailable,
+    });
+    setMessage("");
+    setError("");
+  }
+
+  async function handleDelete(slotId: string) {
+    if (!window.confirm("Delete this availability slot?")) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+
+    try {
+      await deleteAvailabilitySlot(slotId);
+      setMessage("Availability slot deleted successfully.");
+      if (editingSlotId === slotId) {
+        resetForm();
+      }
+      await loadSlots(doctorId);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to delete availability slot");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -72,34 +119,46 @@ export default function DoctorAvailabilityPage() {
       return;
     }
 
+    setIsSaving(true);
+
     try {
-      await createAvailabilitySlot({
-        doctorId,
-        date: form.date,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        isAvailable: form.isAvailable,
-      });
+      if (editingSlotId) {
+        await updateAvailabilitySlot(editingSlotId, {
+          date: form.date,
+          startTime: form.startTime,
+          endTime: form.endTime,
+          isAvailable: form.isAvailable,
+        });
+        setMessage("Availability slot updated successfully.");
+      } else {
+        await createAvailabilitySlot({
+          doctorId,
+          date: form.date,
+          startTime: form.startTime,
+          endTime: form.endTime,
+          isAvailable: form.isAvailable,
+        });
+        setMessage("Availability slot created successfully.");
+      }
 
-      setMessage("Availability slot created successfully.");
-      setForm({
-        date: "",
-        startTime: "09:00",
-        endTime: "10:00",
-        isAvailable: true,
-      });
-
+      resetForm();
       await loadSlots(doctorId);
     } catch (error) {
       console.error(error);
-      setError("Failed to create availability slot");
+      setError(
+        editingSlotId
+          ? "Failed to update availability slot"
+          : "Failed to create availability slot"
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
     <DoctorShell
       title="Doctor Availability"
-      subtitle="Create and review available consultation slots."
+      subtitle="Create, edit, and delete consultation slots. Overlapping slots are blocked by the backend."
     >
       {!doctorId ? (
         <div style={cardStyle}>
@@ -115,7 +174,17 @@ export default function DoctorAvailabilityPage() {
       ) : (
         <>
           <div style={cardStyle}>
-            <h2 style={sectionTitleStyle}>Create Availability Slot</h2>
+            <div style={headerRowStyle}>
+              <h2 style={sectionTitleStyle}>
+                {editingSlotId ? "Edit Availability Slot" : "Create Availability Slot"}
+              </h2>
+
+              {editingSlotId && (
+                <button onClick={resetForm} style={secondaryButtonStyle} type="button">
+                  Cancel Edit
+                </button>
+              )}
+            </div>
 
             <form onSubmit={handleSubmit} style={formGridStyle}>
               <div>
@@ -176,8 +245,12 @@ export default function DoctorAvailabilityPage() {
               </div>
 
               <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Add Availability Slot
+                <button type="submit" style={buttonStyle} disabled={isSaving}>
+                  {isSaving
+                    ? "Saving..."
+                    : editingSlotId
+                    ? "Update Availability Slot"
+                    : "Add Availability Slot"}
                 </button>
               </div>
             </form>
@@ -204,6 +277,7 @@ export default function DoctorAvailabilityPage() {
                       <th style={thStyle}>Start</th>
                       <th style={thStyle}>End</th>
                       <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -214,6 +288,24 @@ export default function DoctorAvailabilityPage() {
                         <td style={tdStyle}>{slot.endTime}</td>
                         <td style={tdStyle}>
                           {slot.isAvailable ? "Available" : "Unavailable"}
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={actionCellStyle}>
+                            <button
+                              type="button"
+                              style={editButtonStyle}
+                              onClick={() => handleEdit(slot)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              style={deleteButtonStyle}
+                              onClick={() => void handleDelete(slot.slotId)}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -296,6 +388,26 @@ const secondaryButtonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
+const editButtonStyle: CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: "none",
+  background: "#dbeafe",
+  color: "#1e3a8a",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const deleteButtonStyle: CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: "none",
+  background: "#fee2e2",
+  color: "#991b1b",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
 const errorStyle: CSSProperties = {
   margin: 0,
   color: "#dc2626",
@@ -334,4 +446,11 @@ const thStyle: CSSProperties = {
 const tdStyle: CSSProperties = {
   padding: "12px",
   borderBottom: "1px solid #e5e7eb",
+  verticalAlign: "top",
+};
+
+const actionCellStyle: CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
 };

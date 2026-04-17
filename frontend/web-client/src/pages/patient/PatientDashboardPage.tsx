@@ -6,6 +6,7 @@ import {
   getStoredPatientProfile,
 } from "../../api/patientApi";
 import { getNotificationsByUser } from "../../api/notificationApi";
+import { getAppointmentsByPatient } from "../../api/appointmentApi";
 
 export default function PatientDashboardPage() {
   const [patientName, setPatientName] = useState("");
@@ -13,6 +14,7 @@ export default function PatientDashboardPage() {
   const [userId, setUserId] = useState("");
   const [reportCount, setReportCount] = useState<number>(0);
   const [notificationCount, setNotificationCount] = useState<number>(0);
+  const [appointmentCount, setAppointmentCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -29,13 +31,15 @@ export default function PatientDashboardPage() {
       setUserId(storedPatient.userId);
 
       try {
-        const [reports, notifications] = await Promise.all([
+        const [reports, notifications, appointments] = await Promise.all([
           getMedicalReportsByPatient(storedPatient.patientId),
           getNotificationsByUser(storedPatient.userId),
+          getAppointmentsByPatient(storedPatient.patientId),
         ]);
 
         setReportCount(reports.length);
         setNotificationCount(notifications.length);
+        setAppointmentCount(appointments.length);
       } catch (error) {
         console.error("Failed to load patient dashboard data", error);
       } finally {
@@ -49,14 +53,14 @@ export default function PatientDashboardPage() {
   return (
     <PatientShell
       title="Patient Dashboard"
-      subtitle="Manage your patient profile, reports, and notifications."
+      subtitle="Manage your health records, browse doctors, and handle appointments."
     >
       {!patientId ? (
         <div style={cardStyle}>
           <h2 style={sectionTitleStyle}>Profile Setup Required</h2>
           <p style={textStyle}>
             No patient profile is linked in the frontend yet. Create your patient
-            profile first, then reports and notifications will use that saved record.
+            profile first, then the rest of the patient workflow will use that saved record.
           </p>
           <Link to="/patient/profile" style={primaryLinkStyle}>
             Go to Patient Profile
@@ -81,6 +85,13 @@ export default function PatientDashboardPage() {
             </div>
 
             <div style={statCardStyle}>
+              <p style={statLabelStyle}>Appointments</p>
+              <h3 style={statValueStyle}>
+                {isLoading ? "Loading..." : appointmentCount}
+              </h3>
+            </div>
+
+            <div style={statCardStyle}>
               <p style={statLabelStyle}>Medical Reports</p>
               <h3 style={statValueStyle}>
                 {isLoading ? "Loading..." : reportCount}
@@ -98,14 +109,17 @@ export default function PatientDashboardPage() {
           <div style={cardStyle}>
             <h2 style={sectionTitleStyle}>Quick Actions</h2>
             <div style={actionRowStyle}>
-              <Link to="/patient/profile" style={primaryLinkStyle}>
-                Manage Profile
+              <Link to="/patient/doctors" style={primaryLinkStyle}>
+                Browse Doctors
+              </Link>
+              <Link to="/patient/appointments" style={secondaryLinkStyle}>
+                My Appointments
               </Link>
               <Link to="/patient/reports" style={secondaryLinkStyle}>
-                Manage Reports
+                Medical Reports
               </Link>
               <Link to="/patient/notifications" style={secondaryLinkStyle}>
-                View Notifications
+                Notifications
               </Link>
             </div>
           </div>

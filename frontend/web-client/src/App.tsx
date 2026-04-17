@@ -8,7 +8,9 @@ import DoctorAvailabilityPage from "./pages/doctor/DoctorAvailabilityPage";
 import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
 import DoctorProfilePage from "./pages/doctor/DoctorProfilePage";
 import DoctorTelemedicinePage from "./pages/doctor/DoctorTelemedicinePage";
+import PatientAppointmentsPage from "./pages/patient/PatientAppointmentsPage";
 import PatientDashboardPage from "./pages/patient/PatientDashboardPage";
+import PatientDoctorsPage from "./pages/patient/PatientDoctorsPage";
 import PatientNotificationsPage from "./pages/patient/PatientNotificationsPage";
 import PatientPaymentsPage from "./pages/patient/PatientPaymentsPage";
 import PatientProfilePage from "./pages/patient/PatientProfilePage";
@@ -40,6 +42,8 @@ function App() {
 
             <Route element={<RoleProtectedRoute allowedRoles={["PATIENT"]} />}>
               <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
+              <Route path="/patient/doctors" element={<PatientDoctorsPage />} />
+              <Route path="/patient/appointments" element={<PatientAppointmentsPage />} />
               <Route path="/patient/profile" element={<PatientProfilePage />} />
               <Route path="/patient/reports" element={<PatientReportsPage />} />
               <Route path="/patient/notifications" element={<PatientNotificationsPage />} />

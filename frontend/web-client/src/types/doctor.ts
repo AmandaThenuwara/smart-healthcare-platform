@@ -1,4 +1,26 @@
-export type DoctorApprovalStatus = "APPROVED" | "PENDING" | "REJECTED";
+export type DoctorApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface CreateDoctorPayload {
+  userId: string;
+  fullName: string;
+  email: string;
+  specialty: string;
+  qualifications: string;
+  hospital: string;
+  consultationFee: number;
+  bio: string;
+  approvalStatus: DoctorApprovalStatus;
+}
+
+export interface UpdateDoctorPayload {
+  fullName?: string;
+  specialty?: string;
+  qualifications?: string;
+  hospital?: string;
+  consultationFee?: number;
+  bio?: string;
+  approvalStatus?: DoctorApprovalStatus;
+}
 
 export interface DoctorProfile {
   doctorId: string;
@@ -10,33 +32,21 @@ export interface DoctorProfile {
   hospital: string;
   consultationFee: number;
   bio: string;
-  approvalStatus: DoctorApprovalStatus | string;
+  approvalStatus: DoctorApprovalStatus;
 }
 
-export interface CreateDoctorPayload {
-  userId: string;
+export interface DoctorBrowseItem {
+  doctorId: string;
   fullName: string;
-  email: string;
   specialty: string;
   qualifications: string;
   hospital: string;
   consultationFee: number;
   bio: string;
-  approvalStatus: DoctorApprovalStatus | string;
+  approvalStatus: DoctorApprovalStatus;
 }
 
-export interface UpdateDoctorPayload {
-  fullName?: string;
-  specialty?: string;
-  qualifications?: string;
-  hospital?: string;
-  consultationFee?: number;
-  bio?: string;
-  approvalStatus?: DoctorApprovalStatus | string;
-}
-
-export interface AvailabilitySlot {
-  slotId: string;
+export interface CreateAvailabilityPayload {
   doctorId: string;
   date: string;
   startTime: string;
@@ -44,7 +54,15 @@ export interface AvailabilitySlot {
   isAvailable: boolean;
 }
 
-export interface CreateAvailabilityPayload {
+export interface UpdateAvailabilityPayload {
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  isAvailable?: boolean;
+}
+
+export interface AvailabilitySlot {
+  slotId: string;
   doctorId: string;
   date: string;
   startTime: string;

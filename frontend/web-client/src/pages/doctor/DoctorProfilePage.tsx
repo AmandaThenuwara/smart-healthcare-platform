@@ -13,7 +13,7 @@ import {
   setStoredDoctorProfile,
   updateDoctorProfile,
 } from "../../api/doctorApi";
-import type { DoctorApprovalStatus, DoctorProfile } from "../../types/doctor";
+import type { ApprovalStatus, DoctorProfile } from "../../types/doctor";
 
 type DoctorFormState = {
   userId: string;
@@ -24,7 +24,7 @@ type DoctorFormState = {
   hospital: string;
   consultationFee: string;
   bio: string;
-  approvalStatus: DoctorApprovalStatus | string;
+  approvalStatus: ApprovalStatus | string;
 };
 
 function extractUserId(user: unknown): string {
@@ -385,3 +385,4 @@ const successStyle: CSSProperties = {
   marginBottom: 0,
   color: "#16a34a",
 };
+

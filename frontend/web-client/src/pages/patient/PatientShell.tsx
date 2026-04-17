@@ -32,6 +32,12 @@ export default function PatientShell({
             <Link to="/patient/dashboard" style={navLinkStyle}>
               Dashboard
             </Link>
+            <Link to="/patient/doctors" style={navLinkStyle}>
+              Browse Doctors
+            </Link>
+            <Link to="/patient/appointments" style={navLinkStyle}>
+              My Appointments
+            </Link>
             <Link to="/patient/profile" style={navLinkStyle}>
               Profile
             </Link>

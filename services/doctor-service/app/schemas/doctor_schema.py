@@ -37,12 +37,30 @@ class DoctorProfileResponse(BaseModel):
     approvalStatus: str
 
 
+class DoctorBrowseResponse(BaseModel):
+    doctorId: str
+    fullName: str
+    specialty: str
+    qualifications: str
+    hospital: str
+    consultationFee: float
+    bio: str
+    approvalStatus: str
+
+
 class AvailabilityCreate(BaseModel):
     doctorId: str
     date: str
     startTime: str
     endTime: str
     isAvailable: bool = True
+
+
+class AvailabilityUpdate(BaseModel):
+    date: str | None = None
+    startTime: str | None = None
+    endTime: str | None = None
+    isAvailable: bool | None = None
 
 
 class AvailabilityResponse(BaseModel):

@@ -9,6 +9,7 @@ def build_availability_document(payload) -> dict:
         "endTime": payload.endTime,
         "isAvailable": payload.isAvailable,
         "createdAt": datetime.now(timezone.utc),
+        "updatedAt": datetime.now(timezone.utc),
     }
 
 

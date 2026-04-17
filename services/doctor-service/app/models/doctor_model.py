@@ -30,3 +30,16 @@ def serialize_doctor(document: dict) -> dict:
         "bio": document["bio"],
         "approvalStatus": document["approvalStatus"],
     }
+
+
+def serialize_doctor_public(document: dict) -> dict:
+    return {
+        "doctorId": str(document["_id"]),
+        "fullName": document["fullName"],
+        "specialty": document["specialty"],
+        "qualifications": document["qualifications"],
+        "hospital": document["hospital"],
+        "consultationFee": float(document["consultationFee"]),
+        "bio": document["bio"],
+        "approvalStatus": document["approvalStatus"],
+    }
