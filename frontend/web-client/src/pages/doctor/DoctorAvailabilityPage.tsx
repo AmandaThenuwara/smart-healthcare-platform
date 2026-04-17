@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import DoctorShell from "./DoctorShell";
 import {
@@ -7,6 +7,17 @@ import {
   getStoredDoctorProfile,
 } from "../../api/doctorApi";
 import type { AvailabilitySlot } from "../../types/doctor";
+import { 
+  Calendar, 
+  Clock, 
+  Plus, 
+  RefreshCw, 
+  ShieldCheck, 
+  AlertCircle,
+  History,
+  CheckCircle2,
+  XCircle
+} from "lucide-react";
 
 function sortSlots(slots: AvailabilitySlot[]) {
   return [...slots].sort((a, b) => {
@@ -81,7 +92,7 @@ export default function DoctorAvailabilityPage() {
         isAvailable: form.isAvailable,
       });
 
-      setMessage("Availability slot created successfully.");
+      setMessage("Slot created.");
       setForm({
         date: "",
         startTime: "09:00",
@@ -99,121 +110,173 @@ export default function DoctorAvailabilityPage() {
   return (
     <DoctorShell
       title="Doctor Availability"
-      subtitle="Create and review available consultation slots."
+      subtitle="Configure your working sessions and appointment availability."
     >
       {!doctorId ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Doctor Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the doctor profile first so the frontend has a saved
-            doctorId to use.
-          </p>
-          <Link to="/doctor/profile" style={linkButtonStyle}>
-            Go to Doctor Profile
+        <div className="bg-white rounded-[24px] p-12 shadow-soft flex flex-col items-center text-center gap-6 border border-slate-100/50">
+          <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 shadow-inner">
+            <AlertCircle size={40} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2 text-slate-800">Profile Setup Required</h2>
+            <p className="text-slate-500 max-w-md font-medium leading-relaxed">
+              Please create your doctor profile first so the frontend has a saved
+              doctorId to associate with these slots.
+            </p>
+          </div>
+          <Link to="/doctor/profile" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg hover:bg-slate-800 transition-all">
+            Go to Profile
           </Link>
         </div>
       ) : (
         <>
-          <div style={cardStyle}>
-            <h2 style={sectionTitleStyle}>Create Availability Slot</h2>
+          <div className="bg-white rounded-[24px] p-8 md:p-10 shadow-soft border border-slate-100/50 mb-10">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 shadow-inner">
+                <Plus size={20} />
+              </div>
+              <h2 className="text-[17px] font-bold text-slate-800">Add New Slot</h2>
+            </div>
 
-            <form onSubmit={handleSubmit} style={formGridStyle}>
-              <div>
-                <label style={labelStyle}>Date</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Session Date</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <Calendar size={16} className="text-slate-400" />
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-bold"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Start Time</label>
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) =>
-                    setForm({ ...form, startTime: e.target.value })
-                  }
-                  style={inputStyle}
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Start Time</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <Clock size={16} className="text-slate-400" />
+                  <input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) =>
+                      setForm({ ...form, startTime: e.target.value })
+                    }
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-bold"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>End Time</label>
-                <input
-                  type="time"
-                  value={form.endTime}
-                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">End Time</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <Clock size={16} className="text-slate-400" />
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-bold"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Availability</label>
-                <select
-                  value={String(form.isAvailable)}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      isAvailable: e.target.value === "true",
-                    })
-                  }
-                  style={inputStyle}
-                >
-                  <option value="true">Available</option>
-                  <option value="false">Unavailable</option>
-                </select>
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Initial Status</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <ShieldCheck size={16} className="text-slate-400" />
+                  <select
+                    value={String(form.isAvailable)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isAvailable: e.target.value === "true",
+                      })
+                    }
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-bold appearance-none cursor-pointer"
+                  >
+                    <option value="true">Available</option>
+                    <option value="false">Unavailable</option>
+                  </select>
+                </div>
               </div>
 
-              <div style={{ gridColumn: "1 / -1" }}>
-                {error && <p style={errorStyle}>{error}</p>}
-                {message && <p style={successStyle}>{message}</p>}
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Add Availability Slot
+              <div className="lg:col-span-4 mt-2">
+                {error && <p className="text-rose-500 text-sm font-bold mb-4 ml-1">{error}</p>}
+                {message && <p className="text-emerald-500 text-sm font-bold mb-4 ml-1">{message}</p>}
+                
+                <button type="submit" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-xl hover:bg-slate-800 transition-all flex items-center gap-2.5 active:scale-95">
+                  <Plus size={18} />
+                  <span>Create Session Slot</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: "20px" }}>
-            <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>Existing Slots</h2>
-              <button onClick={() => void loadSlots(doctorId)} style={secondaryButtonStyle}>
-                Refresh
+          <div className="bg-white rounded-[24px] p-8 md:p-10 shadow-soft border border-slate-100/50">
+            <div className="flex justify-between items-center mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 shadow-inner">
+                  <History size={20} />
+                </div>
+                <h2 className="text-[17px] font-bold text-slate-800">Review Slots</h2>
+              </div>
+              <button onClick={() => void loadSlots(doctorId)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 text-slate-600 rounded-[12px] font-bold text-[13px] border border-slate-100 hover:bg-slate-100 transition-all">
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                <span>Refresh List</span>
               </button>
             </div>
 
             {isLoading ? (
-              <p style={textStyle}>Loading slots...</p>
+              <div className="py-20 flex flex-col items-center gap-4">
+                <RefreshCw size={32} className="animate-spin text-slate-300" />
+                <p className="text-slate-400 font-medium tracking-tight">Syncing your schedule...</p>
+              </div>
             ) : slots.length === 0 ? (
-              <p style={textStyle}>No availability slots found yet.</p>
+              <div className="py-20 flex flex-col items-center gap-4 text-center">
+                <Calendar size={48} className="text-slate-100" />
+                <p className="text-slate-400 font-medium">No sessions scheduled yet.</p>
+              </div>
             ) : (
-              <div style={tableWrapperStyle}>
-                <table style={tableStyle}>
+              <div className="overflow-x-auto rounded-2xl border border-slate-100">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr>
-                      <th style={thStyle}>Date</th>
-                      <th style={thStyle}>Start</th>
-                      <th style={thStyle}>End</th>
-                      <th style={thStyle}>Status</th>
+                    <tr className="bg-slate-50/50">
+                      <th className="p-4 pl-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Session Date</th>
+                      <th className="p-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Time Range</th>
+                      <th className="p-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Current Status</th>
+                      <th className="p-4 pr-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Identifier</th>
                     </tr>
                   </thead>
                   <tbody>
                     {slots.map((slot) => (
-                      <tr key={slot.slotId}>
-                        <td style={tdStyle}>{slot.date}</td>
-                        <td style={tdStyle}>{slot.startTime}</td>
-                        <td style={tdStyle}>{slot.endTime}</td>
-                        <td style={tdStyle}>
-                          {slot.isAvailable ? "Available" : "Unavailable"}
+                      <tr key={slot.slotId} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="p-4 pl-6 border-b border-slate-100/50">
+                          <span className="text-[14px] font-bold text-slate-800">{slot.date}</span>
+                        </td>
+                        <td className="p-4 border-b border-slate-100/50">
+                          <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-600 bg-slate-100/50 px-3 py-1 rounded-lg w-fit">
+                            <Clock size={14} className="text-slate-400" />
+                            <span>{slot.startTime} — {slot.endTime}</span>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-slate-100/50">
+                          {slot.isAvailable ? (
+                            <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full w-fit">
+                              <CheckCircle2 size={14} />
+                              <span className="text-[11px] font-bold uppercase tracking-wider">Available</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1 rounded-full w-fit">
+                              <XCircle size={14} />
+                              <span className="text-[11px] font-bold uppercase tracking-wider">Unavailable</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4 pr-6 border-b border-slate-100/50 text-right">
+                          <code className="text-[11px] font-bold text-slate-300 group-hover:text-slate-400 transition-colors uppercase">{slot.slotId.slice(-8)}</code>
                         </td>
                       </tr>
                     ))}
@@ -227,111 +290,3 @@ export default function DoctorAvailabilityPage() {
     </DoctorShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const linkButtonStyle: CSSProperties = {
-  display: "inline-block",
-  marginTop: "16px",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const tableWrapperStyle: CSSProperties = {
-  overflowX: "auto",
-};
-
-const tableStyle: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-};
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "12px",
-  background: "#f9fafb",
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle: CSSProperties = {
-  padding: "12px",
-  borderBottom: "1px solid #e5e7eb",
-};

@@ -2,7 +2,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type FormEvent,
 } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -14,6 +13,18 @@ import {
   updatePatientProfile,
 } from "../../api/patientApi";
 import type { PatientProfile } from "../../types/patient";
+import { 
+  User, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  Mail, 
+  Users, 
+  ShieldCheck, 
+  Save, 
+  Info,
+  UserPlus
+} from "lucide-react";
 
 type PatientFormState = {
   userId: string;
@@ -146,229 +157,192 @@ export default function PatientProfilePage() {
 
   return (
     <PatientShell
-      title="Patient Profile"
-      subtitle="Create the patient profile first. The frontend will temporarily store it for reports and notifications."
+      title="Profile"
+      subtitle="Complete your personal information to access all services."
     >
-      <div style={cardStyle}>
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={twoColumnGridStyle}>
-            <div>
-              <label style={labelStyle}>User ID</label>
-              <input
-                type="text"
-                value={form.userId}
-                onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                style={inputStyle}
-                placeholder="user_001"
-                required
-                disabled={!!existingPatient || isSubmitting}
-              />
+      <div className="bg-white rounded-[24px] p-8 md:p-12 shadow-soft border border-slate-100/50">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <UserPlus size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Personal Information</h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">User ID</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <ShieldCheck size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.userId}
+                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="user_001"
+                  required
+                  disabled={!!existingPatient || isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                style={inputStyle}
-                placeholder="patient@example.com"
-                required
-                disabled={!!existingPatient || isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Email</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Mail size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="patient@example.com"
+                  required
+                  disabled={!!existingPatient || isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Full Name</label>
-              <input
-                type="text"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                style={inputStyle}
-                placeholder="John Doe"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Full Name</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <User size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="John Doe"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Phone</label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                style={inputStyle}
-                placeholder="0771234567"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Phone</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Phone size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="0771234567"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Date of Birth</label>
-              <input
-                type="date"
-                value={form.dateOfBirth}
-                onChange={(e) =>
-                  setForm({ ...form, dateOfBirth: e.target.value })
-                }
-                style={inputStyle}
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Date of Birth</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Calendar size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="date"
+                  value={form.dateOfBirth}
+                  onChange={(e) =>
+                    setForm({ ...form, dateOfBirth: e.target.value })
+                  }
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Gender</label>
-              <input
-                type="text"
-                value={form.gender}
-                onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                style={inputStyle}
-                placeholder="Male"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Gender</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Users size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="Male"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Emergency Contact Name</label>
-              <input
-                type="text"
-                value={form.emergencyContactName}
-                onChange={(e) =>
-                  setForm({ ...form, emergencyContactName: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="Jane Doe"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Emergency Contact Name</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <User size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.emergencyContactName}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactName: e.target.value })
+                  }
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="Jane Doe"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Emergency Contact Phone</label>
-              <input
-                type="text"
-                value={form.emergencyContactPhone}
-                onChange={(e) =>
-                  setForm({ ...form, emergencyContactPhone: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="0777654321"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Emergency Contact Phone</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Phone size={18} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={form.emergencyContactPhone}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactPhone: e.target.value })
+                  }
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="0777654321"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 
-          <div style={{ marginTop: "16px" }}>
-            <label style={labelStyle}>Address</label>
-            <textarea
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              style={textareaStyle}
-              placeholder="123 Main Street, Colombo"
-              required
-              disabled={isSubmitting}
-            />
+          <div className="mt-8 flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Address</label>
+            <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 px-4 py-3 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <MapPin size={18} className="text-slate-400 flex-shrink-0 mt-1" />
+              <textarea
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                className="w-full min-h-[120px] bg-transparent outline-none text-[14px] text-slate-800 resize-y font-inherit"
+                placeholder="123 Main Street, Colombo"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           {existingPatient && (
-            <div style={infoBoxStyle}>
-              <strong>Current patientId:</strong> {existingPatient.patientId}
+            <div className="mt-8 flex items-center gap-3 px-6 py-4 bg-slate-50 text-slate-600 rounded-[15px] border border-slate-100 text-[13px] font-medium">
+              <Info size={18} className="text-slate-400" />
+              <span><strong>Current patientId:</strong> {existingPatient.patientId}</span>
             </div>
           )}
 
-          {error && <p style={errorStyle}>{error}</p>}
-          {message && <p style={successStyle}>{message}</p>}
+          <div className="mt-10 pt-6 border-t border-slate-100">
+            {error && <p className="mb-4 text-rose-500 text-sm font-medium">{error}</p>}
+            {message && <p className="mb-4 text-emerald-500 text-sm font-medium">{message}</p>}
 
-          <button type="submit" style={buttonStyle} disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : existingPatient
-                ? "Update Patient Profile"
-                : "Create Patient Profile"}
-          </button>
+            <button type="submit" className="flex items-center gap-2.5 bg-[#0f172a] text-white px-10 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-50" disabled={isSubmitting}>
+              <Save size={18} />
+              <span>
+                {isSubmitting
+                  ? "Saving..."
+                  : existingPatient
+                    ? "Update Patient Profile"
+                    : "Create Patient Profile"}
+              </span>
+            </button>
+          </div>
         </form>
       </div>
     </PatientShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const formStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-};
-
-const twoColumnGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-  color: "#111827",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  boxSizing: "border-box",
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: "120px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  resize: "vertical",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  marginTop: "18px",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-  alignSelf: "flex-start",
-};
-
-const infoBoxStyle: CSSProperties = {
-  marginTop: "16px",
-  padding: "12px 14px",
-  background: "#eff6ff",
-  color: "#1e3a8a",
-  borderRadius: "10px",
-};
-
-const errorStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#16a34a",
-};

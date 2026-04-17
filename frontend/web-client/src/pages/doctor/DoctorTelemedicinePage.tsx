@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import DoctorShell from "./DoctorShell";
 import { getStoredDoctorProfile } from "../../api/doctorApi";
 import TelemedicineManager from "../../components/telemedicine/TelemedicineManager";
+import { AlertCircle, UserPlus } from "lucide-react";
 
 export default function DoctorTelemedicinePage() {
   const doctor = getStoredDoctorProfile();
@@ -10,17 +10,23 @@ export default function DoctorTelemedicinePage() {
   return (
     <DoctorShell
       title="Telemedicine"
-      subtitle="Create, find, update, and join telemedicine sessions as a doctor."
+      subtitle="Create, find, update, and join secure video consultations."
     >
       {!doctor ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Doctor Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the doctor profile first so the frontend can prefill
-            the doctorId for telemedicine sessions.
-          </p>
-          <Link to="/doctor/profile" style={primaryLinkStyle}>
-            Go to Doctor Profile
+        <div className="bg-white rounded-[24px] p-12 shadow-soft flex flex-col items-center text-center gap-6 border border-slate-100/50">
+          <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 shadow-inner">
+            <AlertCircle size={40} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2 text-slate-800">Doctor Profile Needed</h2>
+            <p className="text-slate-500 max-w-md font-medium leading-relaxed">
+              Please create the doctor profile first so the system can link your unique
+              ID to secure telemedicine sessions.
+            </p>
+          </div>
+          <Link to="/doctor/profile" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+            <UserPlus size={18} />
+            <span>Go to Doctor Profile</span>
           </Link>
         </div>
       ) : (
@@ -29,30 +35,3 @@ export default function DoctorTelemedicinePage() {
     </DoctorShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "12px",
-};
-
-const textStyle: CSSProperties = {
-  color: "#374151",
-  marginBottom: "16px",
-};
-
-const primaryLinkStyle: CSSProperties = {
-  display: "inline-block",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-};

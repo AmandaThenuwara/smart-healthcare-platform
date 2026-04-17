@@ -1,7 +1,22 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import PatientShell from "./PatientShell";
 import { createSymptomCheck, getMySymptomChecks } from "../../api/aiSymptomApi";
 import type { SymptomCheck } from "../../types/symptom";
+import { 
+  Stethoscope, 
+  Send, 
+  History, 
+  RefreshCw, 
+  AlertTriangle, 
+  Calendar, 
+  Activity, 
+  User, 
+  Clock, 
+  MessageSquare,
+  ShieldAlert,
+  ClipboardList,
+  CheckCircle2
+} from "lucide-react";
 
 export default function PatientSymptomCheckerPage() {
   const [symptomsInput, setSymptomsInput] = useState("");
@@ -90,153 +105,227 @@ export default function PatientSymptomCheckerPage() {
       title="AI Symptom Checker"
       subtitle="Describe symptoms to receive a cautious AI-generated triage summary, urgency level, and next-step recommendation."
     >
-      <div style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Run Symptom Check</h2>
-
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={fullWidthStyle}>
-            <label style={labelStyle}>Symptoms</label>
-            <textarea
-              value={symptomsInput}
-              onChange={(e) => setSymptomsInput(e.target.value)}
-              style={textareaStyle}
-              placeholder="Example: fever, headache, sore throat"
-              required
-            />
-            <p style={helpTextStyle}>Enter symptoms separated by commas.</p>
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50 mb-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <Stethoscope size={20} />
           </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Run Symptom Check</h2>
+        </div>
 
-          <div style={gridStyle}>
-            <div>
-              <label style={labelStyle}>Age</label>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                style={inputStyle}
-                placeholder="25"
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Symptoms</label>
+            <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 px-4 py-3 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <MessageSquare size={18} className="text-slate-400 mt-1" />
+              <textarea
+                value={symptomsInput}
+                onChange={(e) => setSymptomsInput(e.target.value)}
+                className="w-full min-h-[110px] bg-transparent outline-none text-[14px] text-slate-800 resize-y"
+                placeholder="Example: fever, headache, sore throat"
+                required
               />
             </div>
+            <p className="text-[12px] text-slate-400 font-medium ml-1">Enter symptoms separated by commas.</p>
+          </div>
 
-            <div>
-              <label style={labelStyle}>Sex</label>
-              <input
-                type="text"
-                value={sex}
-                onChange={(e) => setSex(e.target.value)}
-                style={inputStyle}
-                placeholder="Male / Female / Other"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Age</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <User size={16} className="text-slate-400" />
+                <input
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="w-full py-3 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="25"
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Duration</label>
-              <input
-                type="text"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                style={inputStyle}
-                placeholder="2 days"
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Sex</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Activity size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={sex}
+                  onChange={(e) => setSex(e.target.value)}
+                  className="w-full py-3 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="Male / Female"
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Severity</label>
-              <select
-                value={severity}
-                onChange={(e) =>
-                  setSeverity(e.target.value as "" | "MILD" | "MODERATE" | "SEVERE")
-                }
-                style={inputStyle}
-              >
-                <option value="">Select severity</option>
-                <option value="MILD">MILD</option>
-                <option value="MODERATE">MODERATE</option>
-                <option value="SEVERE">SEVERE</option>
-              </select>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Duration</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Clock size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="w-full py-3 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="2 days"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Severity</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <ShieldAlert size={16} className="text-slate-400" />
+                <select
+                  value={severity}
+                  onChange={(e) =>
+                    setSeverity(e.target.value as "" | "MILD" | "MODERATE" | "SEVERE")
+                  }
+                  className="w-full py-3 bg-transparent outline-none text-[14px] text-slate-800 appearance-none cursor-pointer"
+                >
+                  <option value="">Select severity</option>
+                  <option value="MILD">MILD</option>
+                  <option value="MODERATE">MODERATE</option>
+                  <option value="SEVERE">SEVERE</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div style={fullWidthStyle}>
-            <label style={labelStyle}>Additional Notes</label>
-            <textarea
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              style={textareaStyle}
-              placeholder="Any extra details about the symptoms"
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Additional Notes</label>
+            <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 px-4 py-3 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <ClipboardList size={18} className="text-slate-400 mt-1" />
+              <textarea
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                className="w-full min-h-[90px] bg-transparent outline-none text-[14px] text-slate-800 resize-y"
+                placeholder="Any extra details..."
+              />
+            </div>
           </div>
 
-          {error && <p style={errorStyle}>{error}</p>}
-          {message && <p style={successStyle}>{message}</p>}
-
-          <button type="submit" style={buttonStyle} disabled={isSubmitting}>
-            {isSubmitting ? "Analyzing..." : "Run AI Symptom Check"}
-          </button>
+          <div className="mt-2">
+            {error && <p className="text-rose-500 text-sm font-medium mb-4">{error}</p>}
+            {message && <p className="text-emerald-500 text-sm font-medium mb-4">{message}</p>}
+            
+            <button type="submit" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2.5 disabled:opacity-50" disabled={isSubmitting}>
+              <Send size={18} />
+              <span>{isSubmitting ? "Analyzing..." : "Run AI Symptom Check"}</span>
+            </button>
+          </div>
         </form>
       </div>
 
-      <div style={{ ...cardStyle, marginTop: "20px" }}>
-        <h2 style={sectionTitleStyle}>Latest Result</h2>
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50 mb-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <CheckCircle2 size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Latest Result</h2>
+        </div>
 
         {!latestResult ? (
-          <p style={emptyTextStyle}>No symptom check result available yet.</p>
+          <div className="py-12 flex flex-col items-center gap-4 text-center">
+            <ShieldAlert size={40} className="text-slate-100" />
+            <p className="text-slate-400 font-medium">No symptom check result available yet.</p>
+          </div>
         ) : (
-          <div style={resultBoxStyle}>
-            <p style={resultTextStyle}>
-              <strong>Urgency:</strong> {latestResult.urgencyLevel}
-            </p>
-            <p style={resultTextStyle}>
-              <strong>Summary:</strong> {latestResult.summary}
-            </p>
-            <p style={resultTextStyle}>
-              <strong>Possible Conditions:</strong>{" "}
-              {latestResult.possibleConditions.length > 0
-                ? latestResult.possibleConditions.join(", ")
-                : "None suggested"}
-            </p>
-            <p style={resultTextStyle}>
-              <strong>Recommendation:</strong> {latestResult.recommendation}
-            </p>
-            <p style={resultTextStyle}>
-              <strong>Red Flags:</strong>{" "}
-              {latestResult.redFlags.length > 0
-                ? latestResult.redFlags.join(", ")
-                : "None highlighted"}
-            </p>
-            <p style={disclaimerStyle}>{latestResult.disclaimer}</p>
+          <div className="space-y-6">
+            <div className={`p-6 rounded-[22px] border ${
+              (latestResult.urgencyLevel === "HIGH" || latestResult.urgencyLevel === "EMERGENCY") 
+                ? "bg-rose-50/50 border-rose-100" 
+                : "bg-amber-50/50 border-amber-100"
+            }`}>
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className={(latestResult.urgencyLevel === "HIGH" || latestResult.urgencyLevel === "EMERGENCY") ? "text-rose-500" : "text-amber-500"} />
+                <h3 className="text-[15px] font-bold text-slate-800 uppercase tracking-wider">
+                  Urgency: <span className={(latestResult.urgencyLevel === "HIGH" || latestResult.urgencyLevel === "EMERGENCY") ? "text-rose-600" : "text-amber-600"}>
+                    {latestResult.urgencyLevel}
+                  </span>
+                </h3>
+              </div>
+              <p className="text-[14px] text-slate-700 leading-relaxed font-medium">{latestResult.summary}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-50/50 p-6 rounded-[22px] border border-slate-100">
+                <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-4">Possible Conditions</h4>
+                <div className="flex flex-wrap gap-2">
+                  {latestResult.possibleConditions && latestResult.possibleConditions.length > 0 ? latestResult.possibleConditions.map((c, i) => (
+                    <span key={i} className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[12px] font-bold text-slate-600">{c}</span>
+                  )) : <span className="text-slate-400 text-sm italic font-medium">None suggested</span>}
+                </div>
+              </div>
+              <div className="bg-slate-50/50 p-6 rounded-[22px] border border-slate-100">
+                <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-4">Red Flags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {latestResult.redFlags && latestResult.redFlags.length > 0 ? latestResult.redFlags.map((flag, i) => (
+                    <span key={i} className="px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[12px] font-bold">{flag}</span>
+                  )) : <span className="text-slate-400 text-sm italic font-medium">None highlighted</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-100/50 p-6 rounded-[22px] border border-slate-100">
+              <h4 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-4">Recommendation</h4>
+              <p className="text-[14px] text-slate-700 font-bold leading-relaxed">{latestResult.recommendation}</p>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-[15px] text-[11px] font-bold text-slate-400 leading-relaxed italic">
+              {latestResult.disclaimer}
+            </div>
           </div>
         )}
       </div>
 
-      <div style={{ ...cardStyle, marginTop: "20px" }}>
-        <div style={headerRowStyle}>
-          <h2 style={sectionTitleStyle}>History</h2>
-          <button onClick={() => void loadHistory()} style={secondaryButtonStyle}>
-            Refresh
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+              <History size={20} />
+            </div>
+            <h2 className="text-[17px] font-bold text-slate-800">Check History</h2>
+          </div>
+          <button onClick={() => void loadHistory()} className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-[12px] font-bold text-[13px] hover:bg-slate-200 transition-all">
+            <RefreshCw size={16} className={isLoadingHistory ? "animate-spin" : ""} />
+            <span>Refresh</span>
           </button>
         </div>
 
         {isLoadingHistory ? (
-          <p style={emptyTextStyle}>Loading history...</p>
+          <div className="py-20 flex flex-col items-center gap-4">
+            <RefreshCw size={32} className="animate-spin text-slate-300" />
+            <p className="text-slate-400 font-medium">Loading history...</p>
+          </div>
         ) : history.length === 0 ? (
-          <p style={emptyTextStyle}>No symptom checks found yet.</p>
+          <div className="py-20 flex flex-col items-center gap-4 text-center">
+            <History size={48} className="text-slate-100" />
+            <p className="text-slate-400 font-medium">No symptom checks found yet.</p>
+          </div>
         ) : (
-          <div style={historyListStyle}>
+          <div className="grid grid-cols-1 gap-4">
             {history.map((item) => (
-              <div key={item.checkId} style={historyItemStyle}>
-                <p style={resultTextStyle}>
-                  <strong>Date:</strong> {new Date(item.createdAt).toLocaleString()}
-                </p>
-                <p style={resultTextStyle}>
-                  <strong>Symptoms:</strong> {item.submittedSymptoms.join(", ")}
-                </p>
-                <p style={resultTextStyle}>
-                  <strong>Urgency:</strong> {item.urgencyLevel}
-                </p>
-                <p style={resultTextStyle}>
-                  <strong>Recommendation:</strong> {item.recommendation}
-                </p>
+              <div key={item.checkId} className="p-6 bg-slate-50/50 rounded-[22px] border border-slate-100 hover:bg-white hover:shadow-xl hover:border-white transition-all duration-300">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {item.submittedSymptoms.map((s, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-white border border-slate-100 rounded-lg text-[11px] font-bold text-slate-500 uppercase tracking-wider">{s}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-400">
+                    <Calendar size={14} className="text-slate-300" />
+                    <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    item.urgencyLevel === "HIGH" || item.urgencyLevel === "EMERGENCY" ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
+                  }`}>
+                    {item.urgencyLevel}
+                  </span>
+                  <p className="text-[13.5px] font-bold text-slate-700 truncate">{item.recommendation}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -245,140 +334,3 @@ export default function PatientSymptomCheckerPage() {
     </PatientShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const formStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-};
-
-const fullWidthStyle: CSSProperties = {
-  width: "100%",
-};
-
-const gridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: "110px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-  resize: "vertical",
-};
-
-const helpTextStyle: CSSProperties = {
-  marginTop: "8px",
-  marginBottom: 0,
-  color: "#6b7280",
-  fontSize: "13px",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-  alignSelf: "flex-start",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const emptyTextStyle: CSSProperties = {
-  margin: 0,
-  color: "#6b7280",
-};
-
-const resultBoxStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "18px",
-  background: "#fcfcfd",
-};
-
-const resultTextStyle: CSSProperties = {
-  margin: "8px 0",
-  color: "#374151",
-};
-
-const disclaimerStyle: CSSProperties = {
-  marginTop: "14px",
-  padding: "12px",
-  borderRadius: "10px",
-  background: "#fef2f2",
-  color: "#991b1b",
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const historyListStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "14px",
-};
-
-const historyItemStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "16px",
-  background: "#fcfcfd",
-};

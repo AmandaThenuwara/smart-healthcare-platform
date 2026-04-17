@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { PaymentStatus, Payment } from "../../types/payment";
 import {
   createPayment,
@@ -8,6 +8,18 @@ import {
 import { getStoredPatientProfile } from "../../api/patientApi";
 import PatientShell from "./PatientShell";
 import { Link } from "react-router-dom";
+import { 
+  CreditCard, 
+  Plus, 
+  RefreshCw, 
+  History, 
+  ShoppingBag, 
+  Calendar, 
+  CheckCircle2, 
+  AlertCircle,
+  Hash,
+  DollarSign
+} from "lucide-react";
 
 const PAYMENT_STATUSES: PaymentStatus[] = ["PENDING", "PAID", "FAILED", "REFUNDED"];
 
@@ -146,146 +158,191 @@ export default function PatientPaymentsPage() {
       subtitle="Create payments, review payment history, and update payment status."
     >
       {!patientId ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Patient Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the patient profile first so the frontend knows which
-            patient payments to load.
-          </p>
-          <Link to="/patient/profile" style={primaryLinkStyle}>
+        <div className="bg-white rounded-[24px] p-12 shadow-soft flex flex-col items-center text-center gap-6">
+          <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+            <AlertCircle size={40} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">Patient Profile Needed</h2>
+            <p className="text-slate-500 max-w-md">
+              Please create the patient profile first so the frontend knows which
+              patient payments to load.
+            </p>
+          </div>
+          <Link to="/patient/profile" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg hover:bg-slate-800 transition-all">
             Go to Patient Profile
           </Link>
         </div>
       ) : (
         <>
-          <div style={cardStyle}>
-            <h2 style={sectionTitleStyle}>Create Payment</h2>
+          <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50 mb-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                <Plus size={20} />
+              </div>
+              <h2 className="text-[17px] font-bold text-slate-800">Create Payment</h2>
+            </div>
 
-            <form onSubmit={handleCreatePayment} style={formGridStyle}>
-              <div>
-                <label style={labelStyle}>Appointment ID</label>
-                <input
-                  type="text"
-                  value={form.appointmentId}
-                  onChange={(e) =>
-                    setForm({ ...form, appointmentId: e.target.value })
-                  }
-                  style={inputStyle}
-                  placeholder="67f323abc456def789003333"
-                  required
-                />
+            <form onSubmit={handleCreatePayment} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Appointment ID</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <Hash size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.appointmentId}
+                    onChange={(e) => setForm({ ...form, appointmentId: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    placeholder="ID..."
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Amount</label>
-                <input
-                  type="number"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Amount</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <DollarSign size={16} className="text-slate-400" />
+                  <input
+                    type="number"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Currency</label>
-                <input
-                  type="text"
-                  value={form.currency}
-                  onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                  style={inputStyle}
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Currency</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <CreditCard size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.currency}
+                    onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Payment Method</label>
-                <input
-                  type="text"
-                  value={form.paymentMethod}
-                  onChange={(e) =>
-                    setForm({ ...form, paymentMethod: e.target.value })
-                  }
-                  style={inputStyle}
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Method</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <ShoppingBag size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.paymentMethod}
+                    onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    required
+                  />
+                </div>
               </div>
 
-              <div style={{ gridColumn: "1 / -1" }}>
-                {error && <p style={errorStyle}>{error}</p>}
-                {message && <p style={successStyle}>{message}</p>}
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Create Payment
+              <div className="lg:col-span-4 mt-2">
+                {error && <p className="text-rose-500 text-sm font-medium mb-4">{error}</p>}
+                {message && <p className="text-emerald-500 text-sm font-medium mb-4">{message}</p>}
+                
+                <button type="submit" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                  <Plus size={18} />
+                  <span>Create Payment</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: "20px" }}>
-            <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>Payment History</h2>
-              <button onClick={() => void loadPayments(patientId)} style={secondaryButtonStyle}>
-                Refresh
+          <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+            <div className="flex justify-between items-center mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                  <History size={20} />
+                </div>
+                <h2 className="text-[17px] font-bold text-slate-800">Payment History</h2>
+              </div>
+              <button onClick={() => void loadPayments(patientId)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-[12px] font-bold text-[13px] hover:bg-slate-200 transition-all">
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                <span>Refresh</span>
               </button>
             </div>
 
             {isLoading ? (
-              <p style={textStyle}>Loading payments...</p>
+              <div className="py-20 flex flex-col items-center gap-4">
+                <RefreshCw size={32} className="animate-spin text-slate-300" />
+                <p className="text-slate-400 font-medium">Loading payments...</p>
+              </div>
             ) : payments.length === 0 ? (
-              <p style={textStyle}>No payments found yet.</p>
+              <div className="py-20 flex flex-col items-center gap-4 text-center">
+                <ShoppingBag size={48} className="text-slate-100" />
+                <p className="text-slate-400 font-medium">No payments found yet.</p>
+              </div>
             ) : (
-              <div style={paymentsListStyle}>
+              <div className="grid grid-cols-1 gap-6">
                 {payments.map((payment) => (
-                  <div key={payment.paymentId} style={paymentCardStyle}>
-                    <div style={paymentHeaderStyle}>
-                      <h3 style={paymentTitleStyle}>Payment #{payment.paymentId}</h3>
-                      <span style={statusBadgeStyle}>{payment.status}</span>
-                    </div>
+                  <div key={payment.paymentId} className="p-6 rounded-[22px] border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:border-white transition-all duration-300">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-[15px] font-bold text-slate-800">Payment #{payment.paymentId}</h3>
+                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wider ${
+                            payment.status === "PAID" ? "bg-emerald-100 text-emerald-600" :
+                            payment.status === "FAILED" ? "bg-rose-100 text-rose-600" :
+                            "bg-amber-100 text-amber-600"
+                          }`}>
+                            {payment.status}
+                          </span>
+                        </div>
 
-                    <p style={metaTextStyle}>
-                      <strong>Appointment ID:</strong> {payment.appointmentId}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Amount:</strong> {payment.amount} {payment.currency}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Method:</strong> {payment.paymentMethod}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Provider:</strong> {payment.provider}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Created At:</strong>{" "}
-                      {new Date(payment.createdAt).toLocaleString()}
-                    </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Amount</span>
+                            <span className="text-[14px] font-bold text-slate-700">{payment.amount} {payment.currency}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Method</span>
+                            <span className="text-[14px] font-bold text-slate-700">{payment.paymentMethod}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date</span>
+                            <div className="flex items-center gap-1.5 text-[14px] font-bold text-slate-700">
+                              <Calendar size={14} className="text-slate-400" />
+                              <span>{new Date(payment.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Appointment</span>
+                            <span className="text-[14px] font-bold text-slate-700 truncate">{payment.appointmentId}</span>
+                          </div>
+                        </div>
+                      </div>
 
-                    <div style={updateRowStyle}>
-                      <select
-                        value={pendingStatuses[payment.paymentId] || payment.status}
-                        onChange={(e) =>
-                          setPendingStatuses((prev) => ({
-                            ...prev,
-                            [payment.paymentId]: e.target.value as PaymentStatus,
-                          }))
-                        }
-                        style={selectStyle}
-                      >
-                        {PAYMENT_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex flex-col sm:flex-row items-center gap-3 lg:pl-6 lg:border-l border-slate-200">
+                        <select
+                          value={pendingStatuses[payment.paymentId] || payment.status}
+                          onChange={(e) =>
+                            setPendingStatuses((prev) => ({
+                              ...prev,
+                              [payment.paymentId]: e.target.value as PaymentStatus,
+                            }))
+                          }
+                          className="min-w-[140px] p-3 bg-white border border-slate-200 rounded-[12px] text-[13px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-100"
+                        >
+                          {PAYMENT_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
 
-                      <button
-                        onClick={() => void handleStatusUpdate(payment.paymentId)}
-                        style={buttonStyle}
-                      >
-                        Update Status
-                      </button>
+                        <button
+                          onClick={() => void handleStatusUpdate(payment.paymentId)}
+                          className="flex items-center gap-2 bg-[#0f172a] text-white px-6 py-3 rounded-[12px] font-bold text-[13px] hover:bg-slate-800 transition-all whitespace-nowrap"
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>Update</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -297,145 +354,3 @@ export default function PatientPaymentsPage() {
     </PatientShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const primaryLinkStyle: CSSProperties = {
-  display: "inline-block",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  marginTop: "16px",
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const paymentsListStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-};
-
-const paymentCardStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "18px",
-  background: "#fcfcfd",
-};
-
-const paymentHeaderStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "12px",
-  alignItems: "center",
-  flexWrap: "wrap",
-};
-
-const paymentTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "12px",
-};
-
-const metaTextStyle: CSSProperties = {
-  margin: "6px 0",
-  color: "#374151",
-};
-
-const statusBadgeStyle: CSSProperties = {
-  display: "inline-block",
-  padding: "6px 10px",
-  borderRadius: "999px",
-  background: "#dbeafe",
-  color: "#1e3a8a",
-  fontWeight: 700,
-  fontSize: "12px",
-};
-
-const updateRowStyle: CSSProperties = {
-  display: "flex",
-  gap: "12px",
-  marginTop: "16px",
-  flexWrap: "wrap",
-};
-
-const selectStyle: CSSProperties = {
-  minWidth: "220px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-};

@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   createTelemedicineSession,
   getTelemedicineByAppointment,
@@ -9,6 +9,20 @@ import type {
   TelemedicineSession,
   TelemedicineStatus,
 } from "../../types/telemedicine";
+import { 
+  Video, 
+  Plus, 
+  Search, 
+  RefreshCw, 
+  Calendar, 
+  User, 
+  Stethoscope, 
+  Link as LinkIcon, 
+  Info,
+  CheckCircle,
+  Clock,
+  ExternalLink
+} from "lucide-react";
 
 type TelemedicineManagerProps = {
   initialDoctorId: string;
@@ -94,10 +108,10 @@ export default function TelemedicineManager({
       const session = await getTelemedicineByAppointment(appointmentLookupId.trim());
       setCurrentSession(session);
       setStatusSelection(session.status);
-      setMessage("Telemedicine session loaded by appointment ID.");
+      setMessage("Telemedicine session loaded.");
     } catch (error) {
       console.error(error);
-      setError("Failed to load telemedicine session by appointment ID");
+      setError("Failed to load telemedicine session.");
     } finally {
       setIsBusy(false);
     }
@@ -117,10 +131,10 @@ export default function TelemedicineManager({
       const session = await getTelemedicineSession(sessionLookupId.trim());
       setCurrentSession(session);
       setStatusSelection(session.status);
-      setMessage("Telemedicine session loaded by session ID.");
+      setMessage("Telemedicine session loaded.");
     } catch (error) {
       console.error(error);
-      setError("Failed to load telemedicine session by session ID");
+      setError("Failed to load telemedicine session.");
     } finally {
       setIsBusy(false);
     }
@@ -152,311 +166,273 @@ export default function TelemedicineManager({
   }
 
   return (
-    <>
-      <div style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Create Telemedicine Session</h2>
+    <div className="space-y-8">
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <Plus size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Create Telemedicine Session</h2>
+        </div>
 
-        <form onSubmit={handleCreate} style={formGridStyle}>
-          <div>
-            <label style={labelStyle}>Appointment ID</label>
-            <input
-              type="text"
-              value={form.appointmentId}
-              onChange={(e) => setForm({ ...form, appointmentId: e.target.value })}
-              style={inputStyle}
-              placeholder="67f323abc456def789003333"
-              required
-            />
+        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Appointment ID</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <Calendar size={16} className="text-slate-400" />
+              <input
+                type="text"
+                value={form.appointmentId}
+                onChange={(e) => setForm({ ...form, appointmentId: e.target.value })}
+                className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                placeholder="ID..."
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Doctor ID</label>
-            <input
-              type="text"
-              value={form.doctorId}
-              onChange={(e) => setForm({ ...form, doctorId: e.target.value })}
-              style={inputStyle}
-              placeholder="67f123abc456def789001234"
-              required
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Doctor ID</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <Stethoscope size={16} className="text-slate-400" />
+              <input
+                type="text"
+                value={form.doctorId}
+                onChange={(e) => setForm({ ...form, doctorId: e.target.value })}
+                className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                placeholder="ID..."
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Patient ID</label>
-            <input
-              type="text"
-              value={form.patientId}
-              onChange={(e) => setForm({ ...form, patientId: e.target.value })}
-              style={inputStyle}
-              placeholder="67f423abc456def789004444"
-              required
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Patient ID</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <User size={16} className="text-slate-400" />
+              <input
+                type="text"
+                value={form.patientId}
+                onChange={(e) => setForm({ ...form, patientId: e.target.value })}
+                className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                placeholder="ID..."
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Room Name</label>
-            <input
-              type="text"
-              value={form.roomName}
-              onChange={(e) => setForm({ ...form, roomName: e.target.value })}
-              style={inputStyle}
-              placeholder="consult-room-001"
-              required
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Room Name</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <Video size={16} className="text-slate-400" />
+              <input
+                type="text"
+                value={form.roomName}
+                onChange={(e) => setForm({ ...form, roomName: e.target.value })}
+                className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                placeholder="consult-room-001"
+                required
+              />
+            </div>
           </div>
 
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={labelStyle}>Meeting URL</label>
-            <input
-              type="text"
-              value={form.meetingUrl}
-              onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })}
-              style={inputStyle}
-              placeholder="Leave blank to auto-generate from room name"
-            />
+          <div className="lg:col-span-4 flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Meeting URL</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <LinkIcon size={16} className="text-slate-400" />
+              <input
+                type="text"
+                value={form.meetingUrl}
+                onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })}
+                className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                placeholder="Leave blank to auto-generate from room name"
+              />
+            </div>
           </div>
 
-          <div style={{ gridColumn: "1 / -1" }}>
-            {error && <p style={errorStyle}>{error}</p>}
-            {message && <p style={successStyle}>{message}</p>}
-          </div>
-
-          <div style={{ gridColumn: "1 / -1" }}>
-            <button type="submit" style={buttonStyle} disabled={isBusy}>
-              {isBusy ? "Processing..." : "Create Session"}
+          <div className="lg:col-span-4 mt-2">
+            {error && <p className="text-rose-500 text-sm font-medium mb-4">{error}</p>}
+            {message && <p className="text-emerald-500 text-sm font-medium mb-4">{message}</p>}
+            
+            <button type="submit" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2 disabled:opacity-50" disabled={isBusy}>
+              <Plus size={18} />
+              <span>{isBusy ? "Processing..." : "Create Session"}</span>
             </button>
           </div>
         </form>
       </div>
 
-      <div style={{ ...cardStyle, marginTop: "20px" }}>
-        <h2 style={sectionTitleStyle}>Find Existing Session</h2>
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <Search size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Find Existing Session</h2>
+        </div>
 
-        <div style={lookupGridStyle}>
-          <div>
-            <label style={labelStyle}>Lookup by Appointment ID</label>
-            <input
-              type="text"
-              value={appointmentLookupId}
-              onChange={(e) => setAppointmentLookupId(e.target.value)}
-              style={inputStyle}
-              placeholder="67f323abc456def789003333"
-            />
-            <button
-              onClick={() => void handleLookupByAppointment()}
-              style={secondaryButtonStyle}
-              disabled={isBusy}
-            >
-              Load by Appointment
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="flex flex-col gap-3">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Lookup by Appointment ID</label>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Calendar size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={appointmentLookupId}
+                  onChange={(e) => setAppointmentLookupId(e.target.value)}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="ID..."
+                />
+              </div>
+              <button
+                onClick={() => void handleLookupByAppointment()}
+                className="bg-slate-100 text-slate-700 px-6 py-3 rounded-[12px] font-bold text-[13px] hover:bg-slate-200 transition-all flex items-center justify-center gap-2 self-start"
+                disabled={isBusy}
+              >
+                <RefreshCw size={16} className={isBusy ? "animate-spin" : ""} />
+                <span>Load by Appointment</span>
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Lookup by Session ID</label>
-            <input
-              type="text"
-              value={sessionLookupId}
-              onChange={(e) => setSessionLookupId(e.target.value)}
-              style={inputStyle}
-              placeholder="67f723abc456def789007777"
-            />
-            <button
-              onClick={() => void handleLookupBySession()}
-              style={secondaryButtonStyle}
-              disabled={isBusy}
-            >
-              Load by Session
-            </button>
+          <div className="flex flex-col gap-3">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Lookup by Session ID</label>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Info size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={sessionLookupId}
+                  onChange={(e) => setSessionLookupId(e.target.value)}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                  placeholder="ID..."
+                />
+              </div>
+              <button
+                onClick={() => void handleLookupBySession()}
+                className="bg-slate-100 text-slate-700 px-6 py-3 rounded-[12px] font-bold text-[13px] hover:bg-slate-200 transition-all flex items-center justify-center gap-2 self-start"
+                disabled={isBusy}
+              >
+                <RefreshCw size={16} className={isBusy ? "animate-spin" : ""} />
+                <span>Load by Session</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ ...cardStyle, marginTop: "20px" }}>
-        <h2 style={sectionTitleStyle}>Current Session</h2>
+      <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <Video size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Current Session Details</h2>
+        </div>
 
         {!currentSession ? (
-          <p style={textStyle}>No telemedicine session loaded yet.</p>
+          <div className="py-12 flex flex-col items-center gap-4 text-center">
+            <Video size={40} className="text-slate-100" />
+            <p className="text-slate-400 font-medium">No telemedicine session loaded yet.</p>
+          </div>
         ) : (
-          <>
-            <div style={detailsGridStyle}>
-              <div style={detailCardStyle}>
-                <p style={metaTextStyle}>
-                  <strong>Session ID:</strong> {currentSession.sessionId}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Appointment ID:</strong> {currentSession.appointmentId}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Doctor ID:</strong> {currentSession.doctorId}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Patient ID:</strong> {currentSession.patientId}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Provider:</strong> {currentSession.provider}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Room Name:</strong> {currentSession.roomName}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Created At:</strong>{" "}
-                  {new Date(currentSession.createdAt).toLocaleString()}
-                </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="p-5 pl-6 bg-slate-50/50 rounded-[22px] border border-slate-100 flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400">
+                    <Info size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Session ID</p>
+                    <p className="text-[14px] font-bold text-slate-800 truncate">{currentSession.sessionId}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400">
+                    <Calendar size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Appointment</p>
+                    <p className="text-[14px] font-bold text-slate-800 truncate">{currentSession.appointmentId}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400">
+                    <User size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Patient</p>
+                    <p className="text-[14px] font-bold text-slate-800 truncate">{currentSession.patientId}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400">
+                    <Stethoscope size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Doctor</p>
+                    <p className="text-[14px] font-bold text-slate-800 truncate">{currentSession.doctorId}</p>
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div style={detailCardStyle}>
-                <p style={metaTextStyle}>
-                  <strong>Status:</strong> {currentSession.status}
-                </p>
-                <p style={metaTextStyle}>
-                  <strong>Meeting URL:</strong>
-                </p>
+            <div className="flex flex-col gap-6">
+              <div className="p-6 bg-[#0f172a] rounded-[22px] text-white shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Status: {currentSession.status}</span>
+                  </div>
+                  <LinkIcon size={16} className="text-slate-500" />
+                </div>
+                <h4 className="text-[17px] font-bold mb-2">Live Consultation</h4>
+                <p className="text-[13px] text-slate-400 mb-6 font-medium">Click the button below to join the secure video session.</p>
                 <a
                   href={currentSession.meetingUrl}
                   target="_blank"
                   rel="noreferrer"
-                  style={meetingLinkStyle}
+                  className="flex items-center justify-center gap-2 bg-white text-[#0f172a] py-4 rounded-[15px] font-bold text-[14px] hover:bg-slate-100 transition-all"
                 >
-                  Open Meeting
+                  <ExternalLink size={18} />
+                  <span>Join Session Now</span>
                 </a>
+              </div>
 
-                <div style={{ marginTop: "18px" }}>
-                  <label style={labelStyle}>Update Status</label>
-                  <select
-                    value={statusSelection}
-                    onChange={(e) =>
-                      setStatusSelection(e.target.value as TelemedicineStatus)
-                    }
-                    style={selectStyle}
-                  >
-                    {TELEMEDICINE_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
+              <div className="p-6 bg-slate-50 border border-slate-100 rounded-[22px]">
+                <label className="text-[13px] font-bold text-slate-600 ml-1 mb-3 block">Update Session Status</label>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 bg-white border border-slate-200 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+                    <Clock size={16} className="text-slate-400" />
+                    <select
+                      value={statusSelection}
+                      onChange={(e) =>
+                        setStatusSelection(e.target.value as TelemedicineStatus)
+                      }
+                      className="w-full py-3 bg-transparent outline-none text-[14px] text-slate-800 font-bold appearance-none cursor-pointer"
+                    >
+                      {TELEMEDICINE_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                   <button
                     onClick={() => void handleStatusUpdate()}
-                    style={{ ...buttonStyle, marginTop: "12px" }}
+                    className="flex items-center justify-center gap-2 bg-[#0f172a] text-white py-3.5 rounded-[12px] font-bold text-[13px] hover:bg-slate-800 transition-all flex-shrink-0"
                     disabled={isBusy}
                   >
-                    Update Session Status
+                    <CheckCircle size={16} />
+                    <span>Update Status</span>
                   </button>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const lookupGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const selectStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  marginTop: "12px",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const detailsGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: "16px",
-};
-
-const detailCardStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "18px",
-  background: "#fcfcfd",
-};
-
-const metaTextStyle: CSSProperties = {
-  margin: "6px 0",
-  color: "#374151",
-};
-
-const meetingLinkStyle: CSSProperties = {
-  display: "inline-block",
-  marginTop: "4px",
-  textDecoration: "none",
-  color: "#1d4ed8",
-  fontWeight: 700,
-};

@@ -2,7 +2,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type FormEvent,
 } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -14,6 +13,20 @@ import {
   updateDoctorProfile,
 } from "../../api/doctorApi";
 import type { DoctorApprovalStatus, DoctorProfile } from "../../types/doctor";
+import { 
+  User, 
+  Mail, 
+  Stethoscope, 
+  GraduationCap, 
+  Building2, 
+  CreditCard, 
+  ShieldCheck, 
+  Info, 
+  Save, 
+  Hash,
+  AlertCircle,
+  FileText
+} from "lucide-react";
 
 type DoctorFormState = {
   userId: string;
@@ -57,7 +70,6 @@ function mapDoctorToForm(doctor: DoctorProfile): DoctorFormState {
 
 export default function DoctorProfilePage() {
   const { user } = useAuth();
-
   const initialUserId = useMemo(() => extractUserId(user), [user]);
 
   const [existingDoctor, setExistingDoctor] = useState<DoctorProfile | null>(null);
@@ -106,7 +118,6 @@ export default function DoctorProfilePage() {
       }
 
       const consultationFee = Number(form.consultationFee);
-
       if (Number.isNaN(consultationFee)) {
         throw new Error("Consultation fee must be a valid number");
       }
@@ -121,7 +132,7 @@ export default function DoctorProfilePage() {
           hospital: form.hospital.trim(),
           consultationFee,
           bio: form.bio.trim(),
-          approvalStatus: form.approvalStatus,
+          approvalStatus: form.approvalStatus as DoctorApprovalStatus,
         });
 
         setStoredDoctorProfile(createdDoctor);
@@ -136,7 +147,7 @@ export default function DoctorProfilePage() {
           hospital: form.hospital.trim(),
           consultationFee,
           bio: form.bio.trim(),
-          approvalStatus: form.approvalStatus,
+          approvalStatus: form.approvalStatus as DoctorApprovalStatus,
         });
 
         setStoredDoctorProfile(updatedDoctor);
@@ -158,230 +169,201 @@ export default function DoctorProfilePage() {
   return (
     <DoctorShell
       title="Doctor Profile"
-      subtitle="Create the doctor profile first. The frontend will temporarily store it for availability and appointments."
+      subtitle="Complete your professional profile to start accepting appointments."
     >
-      <div style={cardStyle}>
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={twoColumnGridStyle}>
-            <div>
-              <label style={labelStyle}>User ID</label>
-              <input
-                type="text"
-                value={form.userId}
-                onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                style={inputStyle}
-                placeholder="user_001"
-                required
-                disabled={!!existingDoctor || isSubmitting}
-              />
+      <div className="bg-white rounded-[24px] p-8 md:p-10 shadow-soft border border-slate-100/50">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+            <User size={20} />
+          </div>
+          <h2 className="text-[17px] font-bold text-slate-800">Professional Information</h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">User ID</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Hash size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={form.userId}
+                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="user_001"
+                  required
+                  disabled={!!existingDoctor || isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                style={inputStyle}
-                placeholder="doctor@example.com"
-                required
-                disabled={!!existingDoctor || isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Email Address</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Mail size={16} className="text-slate-400" />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="doctor@example.com"
+                  required
+                  disabled={!!existingDoctor || isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Full Name</label>
-              <input
-                type="text"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                style={inputStyle}
-                placeholder="Dr. Sarah Perera"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Full Name</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <User size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="Dr. Sarah Perera"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Specialty</label>
-              <input
-                type="text"
-                value={form.specialty}
-                onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-                style={inputStyle}
-                placeholder="General Physician"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Medical Specialty</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Stethoscope size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={form.specialty}
+                  onChange={(e) => setForm({ ...form, specialty: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="General Physician"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Qualifications</label>
-              <input
-                type="text"
-                value={form.qualifications}
-                onChange={(e) =>
-                  setForm({ ...form, qualifications: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="MBBS, MD"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Qualifications</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <GraduationCap size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={form.qualifications}
+                  onChange={(e) => setForm({ ...form, qualifications: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="MBBS, MD"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Hospital</label>
-              <input
-                type="text"
-                value={form.hospital}
-                onChange={(e) => setForm({ ...form, hospital: e.target.value })}
-                style={inputStyle}
-                placeholder="City Hospital"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Primary Hospital</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <Building2 size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={form.hospital}
+                  onChange={(e) => setForm({ ...form, hospital: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="City Hospital"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Consultation Fee</label>
-              <input
-                type="number"
-                value={form.consultationFee}
-                onChange={(e) =>
-                  setForm({ ...form, consultationFee: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="3000"
-                required
-                disabled={isSubmitting}
-              />
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Consultation Fee (LKR)</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <CreditCard size={16} className="text-slate-400" />
+                <input
+                  type="number"
+                  value={form.consultationFee}
+                  onChange={(e) => setForm({ ...form, consultationFee: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-medium"
+                  placeholder="3000"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Approval Status</label>
-              <select
-                value={form.approvalStatus}
-                onChange={(e) =>
-                  setForm({ ...form, approvalStatus: e.target.value })
-                }
-                style={inputStyle}
-                disabled={isSubmitting}
-              >
-                <option value="APPROVED">APPROVED</option>
-                <option value="PENDING">PENDING</option>
-                <option value="REJECTED">REJECTED</option>
-              </select>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-slate-600 ml-1">Approval Status</label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                <ShieldCheck size={16} className="text-slate-400" />
+                <select
+                  value={form.approvalStatus}
+                  onChange={(e) => setForm({ ...form, approvalStatus: e.target.value })}
+                  className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800 font-bold appearance-none cursor-pointer"
+                  disabled={isSubmitting}
+                >
+                  <option value="APPROVED">APPROVED</option>
+                  <option value="PENDING">PENDING</option>
+                  <option value="REJECTED">REJECTED</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div style={{ marginTop: "16px" }}>
-            <label style={labelStyle}>Bio</label>
-            <textarea
-              value={form.bio}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              style={textareaStyle}
-              placeholder="Experienced general physician"
-              required
-              disabled={isSubmitting}
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-slate-600 ml-1">Professional Bio</label>
+            <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 px-4 py-3 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+              <FileText size={18} className="text-slate-400 mt-1" />
+              <textarea
+                value={form.bio}
+                onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                className="w-full min-h-[140px] bg-transparent outline-none text-[14px] text-slate-800 resize-y leading-relaxed"
+                placeholder="Briefly describe your experience and medical background..."
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           {existingDoctor && (
-            <div style={infoBoxStyle}>
-              <strong>Current doctorId:</strong> {existingDoctor.doctorId}
+            <div className="flex items-center gap-3 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[15px] text-slate-500 text-[13px] font-medium">
+              <Info size={18} className="text-[#0f172a]" />
+              <span><strong>System ID:</strong> <code className="bg-white px-2 py-0.5 rounded border border-slate-200">{existingDoctor.doctorId}</code></span>
             </div>
           )}
 
-          {error && <p style={errorStyle}>{error}</p>}
-          {message && <p style={successStyle}>{message}</p>}
-
-          <button type="submit" style={buttonStyle} disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : existingDoctor
-                ? "Update Doctor Profile"
-                : "Create Doctor Profile"}
-          </button>
+          <div className="mt-4">
+            {error && (
+              <div className="flex items-center gap-2 text-rose-500 text-[14px] font-bold mb-4 ml-1 animate-in fade-in duration-300">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+            {message && (
+              <div className="flex items-center gap-2 text-emerald-500 text-[14px] font-bold mb-4 ml-1 animate-in fade-in duration-300">
+                <ShieldCheck size={16} />
+                <span>{message}</span>
+              </div>
+            )}
+            
+            <button 
+              type="submit" 
+              className="bg-[#0f172a] text-white px-10 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center justify-center gap-2.5 active:scale-95 disabled:opacity-50"
+              disabled={isSubmitting}
+            >
+              <Save size={18} />
+              <span>
+                {isSubmitting
+                  ? "Saving Changes..."
+                  : existingDoctor
+                    ? "Update Profile"
+                    : "Create Profile"}
+              </span>
+            </button>
+          </div>
         </form>
       </div>
     </DoctorShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const formStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-};
-
-const twoColumnGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-  color: "#111827",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  boxSizing: "border-box",
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: "120px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  resize: "vertical",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  marginTop: "18px",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-  alignSelf: "flex-start",
-};
-
-const infoBoxStyle: CSSProperties = {
-  marginTop: "16px",
-  padding: "12px 14px",
-  background: "#eff6ff",
-  color: "#1e3a8a",
-  borderRadius: "10px",
-};
-
-const errorStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: 0,
-  color: "#16a34a",
-};

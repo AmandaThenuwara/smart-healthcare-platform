@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import PatientShell from "./PatientShell";
 import {
@@ -7,6 +7,18 @@ import {
   getStoredPatientProfile,
 } from "../../api/patientApi";
 import type { MedicalReport } from "../../types/patient";
+import { 
+  FileText, 
+  Plus, 
+  RefreshCw, 
+  File, 
+  Calendar, 
+  Link as LinkIcon, 
+  Tag, 
+  AlertCircle,
+  History,
+  ExternalLink
+} from "lucide-react";
 
 function sortReports(reports: MedicalReport[]) {
   return [...reports].sort((a, b) => {
@@ -92,120 +104,166 @@ export default function PatientReportsPage() {
   return (
     <PatientShell
       title="Medical Reports"
-      subtitle="Create and review medical report metadata entries."
+      subtitle="View and manage your health records and diagnostic reports."
     >
       {!patientId ? (
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Patient Profile Needed</h2>
-          <p style={textStyle}>
-            Please create the patient profile first so the frontend has a saved
-            patientId to use.
-          </p>
-          <Link to="/patient/profile" style={linkButtonStyle}>
+        <div className="bg-white rounded-[24px] p-12 shadow-soft flex flex-col items-center text-center gap-6">
+          <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+            <AlertCircle size={40} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2 text-slate-800">Patient Profile Needed</h2>
+            <p className="text-slate-500 max-w-md">
+              Please create the patient profile first so the frontend has a saved
+              patientId to use.
+            </p>
+          </div>
+          <Link to="/patient/profile" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg hover:bg-slate-800 transition-all">
             Go to Patient Profile
           </Link>
         </div>
       ) : (
         <>
-          <div style={cardStyle}>
-            <h2 style={sectionTitleStyle}>Add Report Metadata</h2>
+          <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50 mb-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                <Plus size={20} />
+              </div>
+              <h2 className="text-[17px] font-bold text-slate-800">Add Report Metadata</h2>
+            </div>
 
-            <form onSubmit={handleSubmit} style={formGridStyle}>
-              <div>
-                <label style={labelStyle}>Title</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  style={inputStyle}
-                  placeholder="Blood Test Report"
-                  required
-                />
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Title</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <FileText size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    placeholder="Blood Test Report"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>File Name</label>
-                <input
-                  type="text"
-                  value={form.fileName}
-                  onChange={(e) =>
-                    setForm({ ...form, fileName: e.target.value })
-                  }
-                  style={inputStyle}
-                  placeholder="blood-test.pdf"
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">File Name</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <File size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.fileName}
+                    onChange={(e) =>
+                      setForm({ ...form, fileName: e.target.value })
+                    }
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    placeholder="blood-test.pdf"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>File URL</label>
-                <input
-                  type="text"
-                  value={form.fileUrl}
-                  onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
-                  style={inputStyle}
-                  placeholder="/uploads/blood-test.pdf"
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">File URL</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <LinkIcon size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.fileUrl}
+                    onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    placeholder="/uploads/..."
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Report Type</label>
-                <input
-                  type="text"
-                  value={form.reportType}
-                  onChange={(e) =>
-                    setForm({ ...form, reportType: e.target.value })
-                  }
-                  style={inputStyle}
-                  placeholder="Lab Report"
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-600 ml-1">Report Type</label>
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 rounded-[12px] focus-within:ring-2 focus-within:ring-slate-200 transition-all">
+                  <Tag size={16} className="text-slate-400" />
+                  <input
+                    type="text"
+                    value={form.reportType}
+                    onChange={(e) =>
+                      setForm({ ...form, reportType: e.target.value })
+                    }
+                    className="w-full py-3.5 bg-transparent outline-none text-[14px] text-slate-800"
+                    placeholder="Lab Report"
+                    required
+                  />
+                </div>
               </div>
 
-              <div style={{ gridColumn: "1 / -1" }}>
-                {error && <p style={errorStyle}>{error}</p>}
-                {message && <p style={successStyle}>{message}</p>}
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Add Report Metadata
+              <div className="col-span-full mt-2">
+                {error && <p className="text-rose-500 text-sm font-medium mb-4">{error}</p>}
+                {message && <p className="text-emerald-500 text-sm font-medium mb-4">{message}</p>}
+                
+                <button type="submit" className="bg-[#0f172a] text-white px-8 py-4 rounded-[15px] font-bold text-[14px] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                  <Plus size={18} />
+                  <span>Add Report Metadata</span>
                 </button>
               </div>
             </form>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: "20px" }}>
-            <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>Existing Reports</h2>
-              <button onClick={() => void loadReports(patientId)} style={secondaryButtonStyle}>
-                Refresh
+          <div className="bg-white rounded-[24px] p-8 shadow-soft border border-slate-100/50">
+            <div className="flex justify-between items-center mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                  <History size={20} />
+                </div>
+                <h2 className="text-[17px] font-bold text-slate-800">Existing Reports</h2>
+              </div>
+              <button 
+                onClick={() => void loadReports(patientId)} 
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-600 rounded-[12px] font-bold text-[13px] hover:bg-slate-200 transition-all"
+                disabled={isLoading}
+              >
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                <span>Refresh</span>
               </button>
             </div>
 
             {isLoading ? (
-              <p style={textStyle}>Loading reports...</p>
+              <div className="py-20 flex flex-col items-center gap-4">
+                <RefreshCw size={32} className="animate-spin text-slate-300" />
+                <p className="text-slate-400 font-medium">Loading reports...</p>
+              </div>
             ) : reports.length === 0 ? (
-              <p style={textStyle}>No medical reports found yet.</p>
+              <div className="py-20 flex flex-col items-center gap-4 text-center">
+                <FileText size={48} className="text-slate-100" />
+                <p className="text-slate-400 font-medium">No medical reports found yet.</p>
+              </div>
             ) : (
-              <div style={reportsListStyle}>
+              <div className="grid grid-cols-1 gap-4">
                 {reports.map((report) => (
-                  <div key={report.reportId} style={reportCardStyle}>
-                    <h3 style={reportTitleStyle}>{report.title}</h3>
-                    <p style={metaTextStyle}>
-                      <strong>Type:</strong> {report.reportType}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>File Name:</strong> {report.fileName}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>File URL:</strong> {report.fileUrl}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Uploaded At:</strong>{" "}
-                      {new Date(report.uploadedAt).toLocaleString()}
-                    </p>
+                  <div key={report.reportId} className="flex justify-between items-center p-6 bg-slate-50/50 rounded-[22px] border border-slate-100 hover:bg-white hover:shadow-xl hover:border-white transition-all duration-300 group">
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-[15px] font-bold text-slate-800">{report.title}</h3>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-400 overflow-hidden">
+                          <Tag size={14} className="text-slate-300" />
+                          <span className="truncate">{report.reportType}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-400">
+                          <Calendar size={14} className="text-slate-300" />
+                          <span>{new Date(report.uploadedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white rounded-[10px] text-[11px] font-bold text-slate-500 border border-slate-100">
+                        <File size={14} className="text-slate-300" />
+                        <span className="truncate max-w-[120px]">{report.fileName}</span>
+                      </div>
+                      <a href={report.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#0f172a] text-white px-5 py-2.5 rounded-[12px] font-bold text-[13px] hover:bg-slate-800 transition-all">
+                        <ExternalLink size={14} />
+                        <span>View</span>
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -216,113 +274,3 @@ export default function PatientReportsPage() {
     </PatientShell>
   );
 }
-
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "14px",
-};
-
-const textStyle: CSSProperties = {
-  margin: 0,
-  color: "#374151",
-};
-
-const linkButtonStyle: CSSProperties = {
-  display: "inline-block",
-  marginTop: "16px",
-  textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
-  color: "#111827",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  marginBottom: "14px",
-  flexWrap: "wrap",
-};
-
-const reportsListStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-};
-
-const reportCardStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "18px",
-  background: "#fcfcfd",
-};
-
-const reportTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "12px",
-};
-
-const metaTextStyle: CSSProperties = {
-  margin: "6px 0",
-  color: "#374151",
-};
