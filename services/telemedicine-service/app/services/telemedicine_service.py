@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import HTTPException, status
@@ -11,6 +13,7 @@ from app.core.config import (
 )
 from app.db.mongodb import get_sessions_collection
 from app.models.telemedicine_model import build_session_document, serialize_session
+from app.utils.notification_dispatcher import dispatch_bulk_notifications
 
 VALID_SESSION_STATUS_TRANSITIONS = {
     "SCHEDULED": {"STARTED"},
@@ -27,6 +30,8 @@ _service_client = MongoClient(
 
 _appointments_collection = _service_client["appointment_db"]["appointments"]
 _payments_collection = _service_client["payment_db"]["payments"]
+_patients_collection = _service_client["patient_db"]["patients"]
+_doctors_collection = _service_client["doctor_db"]["doctors"]
 
 
 def ensure_session_indexes():
@@ -64,12 +69,34 @@ def _get_payment_or_404(appointment_id: str):
     return payment
 
 
+def _get_patient_or_404(patient_id: str):
+    patient = _patients_collection.find_one(
+        {"_id": _to_object_id(patient_id, "Patient profile not found")}
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+    return patient
+
+
+def _get_doctor_or_404(doctor_id: str):
+    doctor = _doctors_collection.find_one(
+        {"_id": _to_object_id(doctor_id, "Doctor profile not found")}
+    )
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor profile not found")
+    return doctor
+
+
 def _generate_room_name(appointment_id: str) -> str:
     return f"consult-{appointment_id}".lower()
 
 
 def _generate_meeting_url(room_name: str) -> str:
     return f"https://meet.jit.si/{room_name}"
+
+
+def _appointment_label(appointment: dict) -> str:
+    return f"{appointment.get('date')} at {appointment.get('timeSlot')}"
 
 
 def create_session(payload, appointment_document=None):
@@ -105,6 +132,9 @@ def create_session(payload, appointment_document=None):
 
     doctor_id = appointment.get("doctorId")
     patient_id = appointment.get("patientId")
+    doctor = _get_doctor_or_404(doctor_id)
+    patient = _get_patient_or_404(patient_id)
+
     room_name = _generate_room_name(payload.appointmentId)
     meeting_url = _generate_meeting_url(room_name)
 
@@ -120,7 +150,34 @@ def create_session(payload, appointment_document=None):
 
     result = sessions.insert_one(document)
     created = sessions.find_one({"_id": result.inserted_id})
-    return serialize_session(created)
+    serialized = serialize_session(created)
+
+    appointment_text = _appointment_label(appointment)
+
+    dispatch_bulk_notifications(
+        [
+            {
+                "user_id": patient.get("userId"),
+                "title": "Telemedicine Session Created",
+                "message": f"Your telemedicine session for {appointment_text} is ready. Meeting link: {meeting_url}",
+                "notification_type": "CONSULTATION",
+                "email_to": patient.get("email"),
+                "email_subject": "Telemedicine Session Created - Smart Healthcare",
+                "email_body": f"Hello {patient.get('fullName')},\n\nYour telemedicine session for {appointment_text} is ready.\nMeeting link: {meeting_url}\n\nRegards,\nSmart Healthcare",
+            },
+            {
+                "user_id": doctor.get("userId"),
+                "title": "Telemedicine Session Created",
+                "message": f"Telemedicine session for {patient.get('fullName')} on {appointment_text} is ready. Meeting link: {meeting_url}",
+                "notification_type": "CONSULTATION",
+                "email_to": doctor.get("email"),
+                "email_subject": "Telemedicine Session Created - Smart Healthcare",
+                "email_body": f"Hello {doctor.get('fullName')},\n\nThe telemedicine session for {patient.get('fullName')} on {appointment_text} is ready.\nMeeting link: {meeting_url}\n\nRegards,\nSmart Healthcare",
+            },
+        ]
+    )
+
+    return serialized
 
 
 def get_session_by_id(session_id: str):
@@ -148,6 +205,10 @@ def update_session_status(session_id: str, payload):
     if not session:
         raise HTTPException(status_code=404, detail="Telemedicine session not found")
 
+    appointment = _get_appointment_or_404(session.get("appointmentId"))
+    patient = _get_patient_or_404(session.get("patientId"))
+    doctor = _get_doctor_or_404(session.get("doctorId"))
+
     current_status = session.get("status")
     new_status = payload.status
 
@@ -164,9 +225,37 @@ def update_session_status(session_id: str, payload):
         {
             "$set": {
                 "status": new_status,
+                "updatedAt": datetime.now(timezone.utc),
             }
         },
     )
 
     updated = sessions.find_one({"_id": session["_id"]})
-    return serialize_session(updated)
+    serialized = serialize_session(updated)
+
+    if new_status != current_status:
+        appointment_text = _appointment_label(appointment)
+        dispatch_bulk_notifications(
+            [
+                {
+                    "user_id": patient.get("userId"),
+                    "title": "Telemedicine Session Status Updated",
+                    "message": f"Your telemedicine session for {appointment_text} changed from {current_status} to {new_status}.",
+                    "notification_type": "CONSULTATION",
+                    "email_to": patient.get("email"),
+                    "email_subject": "Telemedicine Session Status Updated - Smart Healthcare",
+                    "email_body": f"Hello {patient.get('fullName')},\n\nYour telemedicine session for {appointment_text} changed from {current_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
+                },
+                {
+                    "user_id": doctor.get("userId"),
+                    "title": "Telemedicine Session Status Updated",
+                    "message": f"Telemedicine session for {patient.get('fullName')} on {appointment_text} changed from {current_status} to {new_status}.",
+                    "notification_type": "CONSULTATION",
+                    "email_to": doctor.get("email"),
+                    "email_subject": "Telemedicine Session Status Updated - Smart Healthcare",
+                    "email_body": f"Hello {doctor.get('fullName')},\n\nThe telemedicine session for {patient.get('fullName')} on {appointment_text} changed from {current_status} to {new_status}.\n\nRegards,\nSmart Healthcare",
+                },
+            ]
+        )
+
+    return serialized
