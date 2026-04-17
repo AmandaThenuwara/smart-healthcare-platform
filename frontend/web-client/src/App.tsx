@@ -13,6 +13,7 @@ import PatientNotificationsPage from "./pages/patient/PatientNotificationsPage";
 import PatientPaymentsPage from "./pages/patient/PatientPaymentsPage";
 import PatientProfilePage from "./pages/patient/PatientProfilePage";
 import PatientReportsPage from "./pages/patient/PatientReportsPage";
+import PatientSymptomCheckerPage from "./pages/patient/PatientSymptomCheckerPage";
 import PatientTelemedicinePage from "./pages/patient/PatientTelemedicinePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleProtectedRoute from "./routes/RoleProtectedRoute";
@@ -44,6 +45,7 @@ function App() {
               <Route path="/patient/notifications" element={<PatientNotificationsPage />} />
               <Route path="/patient/payments" element={<PatientPaymentsPage />} />
               <Route path="/patient/telemedicine" element={<PatientTelemedicinePage />} />
+              <Route path="/patient/symptom-checker" element={<PatientSymptomCheckerPage />} />
             </Route>
           </Route>
         </Routes>

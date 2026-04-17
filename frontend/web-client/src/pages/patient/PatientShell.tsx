@@ -47,6 +47,9 @@ export default function PatientShell({
             <Link to="/patient/telemedicine" style={navLinkStyle}>
               Telemedicine
             </Link>
+            <Link to="/patient/symptom-checker" style={navLinkStyle}>
+              Symptom Checker
+            </Link>
           </nav>
         </div>
 
