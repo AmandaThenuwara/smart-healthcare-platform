@@ -1,15 +1,19 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import type { PaymentStatus, Payment } from "../../types/payment";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
 import {
   createPayment,
+  createStripeCheckoutSession,
   getPaymentsByPatient,
-  updatePaymentStatus,
 } from "../../api/paymentApi";
 import { getStoredPatientProfile } from "../../api/patientApi";
 import PatientShell from "./PatientShell";
-import { Link } from "react-router-dom";
-
-const PAYMENT_STATUSES: PaymentStatus[] = ["PENDING", "PAID", "FAILED", "REFUNDED"];
+import { Link, useLocation } from "react-router-dom";
+import type { Payment } from "../../types/payment";
 
 function sortPayments(data: Payment[]) {
   return [...data].sort(
@@ -17,13 +21,22 @@ function sortPayments(data: Payment[]) {
   );
 }
 
+function canStartStripeCheckout(status: Payment["status"]) {
+  return status === "PENDING" || status === "FAILED";
+}
+
 export default function PatientPaymentsPage() {
+  const location = useLocation();
+  const searchParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
+
   const [patientId, setPatientId] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [pendingStatuses, setPendingStatuses] = useState<Record<string, PaymentStatus>>(
-    {}
-  );
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [startingCheckoutId, setStartingCheckoutId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -46,20 +59,27 @@ export default function PatientPaymentsPage() {
     void loadPayments(storedPatient.patientId);
   }, []);
 
+  useEffect(() => {
+    const stripeStatus = searchParams.get("stripe");
+
+    if (stripeStatus === "success") {
+      setMessage(
+        "Stripe checkout completed. Waiting for backend webhook confirmation. Click Refresh in a few seconds if the status is still pending."
+      );
+      setError("");
+    } else if (stripeStatus === "cancel") {
+      setError("Stripe checkout was cancelled before payment completion.");
+      setMessage("");
+    }
+  }, [searchParams]);
+
   async function loadPayments(currentPatientId: string) {
     setIsLoading(true);
     setError("");
 
     try {
       const data = await getPaymentsByPatient(currentPatientId);
-      const sorted = sortPayments(data);
-      setPayments(sorted);
-
-      const nextStatuses: Record<string, PaymentStatus> = {};
-      sorted.forEach((payment) => {
-        nextStatuses[payment.paymentId] = payment.status;
-      });
-      setPendingStatuses(nextStatuses);
+      setPayments(sortPayments(data));
     } catch (error) {
       console.error(error);
       setError("Failed to load payments");
@@ -85,8 +105,10 @@ export default function PatientPaymentsPage() {
       return;
     }
 
+    setIsCreatingPayment(true);
+
     try {
-      await createPayment({
+      const created = await createPayment({
         appointmentId: form.appointmentId.trim(),
         patientId,
         amount,
@@ -96,7 +118,9 @@ export default function PatientPaymentsPage() {
         status: "PENDING",
       });
 
-      setMessage("Payment created successfully.");
+      setMessage(
+        `Payment created successfully for appointment ${created.appointmentId}. Use the Pay with Stripe button below to continue.`
+      );
       setForm({
         appointmentId: "",
         amount: "3000",
@@ -108,42 +132,30 @@ export default function PatientPaymentsPage() {
     } catch (error) {
       console.error(error);
       setError("Failed to create payment");
+    } finally {
+      setIsCreatingPayment(false);
     }
   }
 
-  async function handleStatusUpdate(paymentId: string) {
-    const nextStatus = pendingStatuses[paymentId];
-
-    if (!nextStatus) return;
-
+  async function handleStripeCheckout(paymentId: string) {
     setError("");
     setMessage("");
+    setStartingCheckoutId(paymentId);
 
     try {
-      const updated = await updatePaymentStatus(paymentId, nextStatus);
-
-      setPayments((prev) =>
-        sortPayments(
-          prev.map((payment) => (payment.paymentId === paymentId ? updated : payment))
-        )
-      );
-
-      setPendingStatuses((prev) => ({
-        ...prev,
-        [paymentId]: updated.status,
-      }));
-
-      setMessage(`Payment ${paymentId} updated to ${updated.status}.`);
+      const session = await createStripeCheckoutSession(paymentId);
+      window.location.href = session.checkoutUrl;
     } catch (error) {
       console.error(error);
-      setError(`Failed to update payment ${paymentId}`);
+      setError("Failed to start Stripe checkout");
+      setStartingCheckoutId(null);
     }
   }
 
   return (
     <PatientShell
       title="Payments"
-      subtitle="Create payments, review payment history, and update payment status."
+      subtitle="Create payment records and continue to hosted Stripe Checkout in demo test mode."
     >
       {!patientId ? (
         <div style={cardStyle}>
@@ -171,7 +183,7 @@ export default function PatientPaymentsPage() {
                     setForm({ ...form, appointmentId: e.target.value })
                   }
                   style={inputStyle}
-                  placeholder="67f323abc456def789003333"
+                  placeholder="Enter appointment id"
                   required
                 />
               </div>
@@ -217,8 +229,8 @@ export default function PatientPaymentsPage() {
               </div>
 
               <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Create Payment
+                <button type="submit" style={buttonStyle} disabled={isCreatingPayment}>
+                  {isCreatingPayment ? "Creating Payment..." : "Create Payment"}
                 </button>
               </div>
             </form>
@@ -227,7 +239,10 @@ export default function PatientPaymentsPage() {
           <div style={{ ...cardStyle, marginTop: "20px" }}>
             <div style={headerRowStyle}>
               <h2 style={sectionTitleStyle}>Payment History</h2>
-              <button onClick={() => void loadPayments(patientId)} style={secondaryButtonStyle}>
+              <button
+                onClick={() => void loadPayments(patientId)}
+                style={secondaryButtonStyle}
+              >
                 Refresh
               </button>
             </div>
@@ -262,31 +277,24 @@ export default function PatientPaymentsPage() {
                       {new Date(payment.createdAt).toLocaleString()}
                     </p>
 
-                    <div style={updateRowStyle}>
-                      <select
-                        value={pendingStatuses[payment.paymentId] || payment.status}
-                        onChange={(e) =>
-                          setPendingStatuses((prev) => ({
-                            ...prev,
-                            [payment.paymentId]: e.target.value as PaymentStatus,
-                          }))
-                        }
-                        style={selectStyle}
-                      >
-                        {PAYMENT_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-
-                      <button
-                        onClick={() => void handleStatusUpdate(payment.paymentId)}
-                        style={buttonStyle}
-                      >
-                        Update Status
-                      </button>
-                    </div>
+                    {canStartStripeCheckout(payment.status) ? (
+                      <div style={checkoutActionWrapStyle}>
+                        <button
+                          onClick={() => void handleStripeCheckout(payment.paymentId)}
+                          style={checkoutButtonStyle}
+                          disabled={startingCheckoutId === payment.paymentId}
+                        >
+                          {startingCheckoutId === payment.paymentId
+                            ? "Redirecting to Stripe..."
+                            : "Pay with Stripe"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={paidInfoBoxStyle}>
+                        Stripe Checkout is not needed for this payment because the current status is{" "}
+                        <strong>{payment.status}</strong>.
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -353,6 +361,16 @@ const buttonStyle: CSSProperties = {
   background: "#1d4ed8",
   color: "white",
   fontWeight: 600,
+  cursor: "pointer",
+};
+
+const checkoutButtonStyle: CSSProperties = {
+  padding: "12px 16px",
+  borderRadius: "10px",
+  border: "none",
+  background: "#635bff",
+  color: "white",
+  fontWeight: 700,
   cursor: "pointer",
 };
 
@@ -426,16 +444,14 @@ const statusBadgeStyle: CSSProperties = {
   fontSize: "12px",
 };
 
-const updateRowStyle: CSSProperties = {
-  display: "flex",
-  gap: "12px",
+const checkoutActionWrapStyle: CSSProperties = {
   marginTop: "16px",
-  flexWrap: "wrap",
 };
 
-const selectStyle: CSSProperties = {
-  minWidth: "220px",
-  padding: "12px",
+const paidInfoBoxStyle: CSSProperties = {
+  marginTop: "16px",
+  padding: "12px 14px",
   borderRadius: "10px",
-  border: "1px solid #d1d5db",
+  background: "#eef2ff",
+  color: "#3730a3",
 };

@@ -24,6 +24,11 @@ export async function createPatientProfile(
   return response.data;
 }
 
+export async function getMyPatientProfile(): Promise<PatientProfile> {
+  const response = await patientApi.get("/patients/me");
+  return response.data;
+}
+
 export async function getPatientProfile(patientId: string): Promise<PatientProfile> {
   const response = await patientApi.get(`/patients/${patientId}`);
   return response.data;

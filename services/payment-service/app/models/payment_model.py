@@ -18,6 +18,8 @@ def build_payment_document(
         "paymentMethod": payment_method,
         "provider": provider,
         "status": status,
+        "stripeSessionId": None,
+        "stripePaymentIntentId": None,
         "createdAt": datetime.now(timezone.utc),
         "updatedAt": datetime.now(timezone.utc),
     }

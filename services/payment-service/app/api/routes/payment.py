@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, Request, status
 
 from app.core.dependencies import (
     ensure_patient_owner_or_admin,
@@ -6,15 +6,32 @@ from app.core.dependencies import (
     get_current_patient_profile_id,
     require_roles,
 )
-from app.schemas.payment_schema import PaymentCreate, PaymentResponse, PaymentStatusUpdate
+from app.schemas.payment_schema import (
+    CheckoutSessionResponse,
+    PaymentCreate,
+    PaymentResponse,
+    PaymentStatusUpdate,
+    StripeWebhookResponse,
+)
 from app.services.payment_service import (
+    create_checkout_session,
     create_payment,
     get_payment_by_appointment,
     list_payments_by_patient,
+    process_stripe_webhook,
     update_payment_status,
 )
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+
+
+@router.post("/webhook", response_model=StripeWebhookResponse, include_in_schema=True)
+async def stripe_webhook(
+    request: Request,
+    stripe_signature: str | None = Header(default=None, alias="Stripe-Signature"),
+):
+    payload = (await request.body()).decode("utf-8")
+    return process_stripe_webhook(payload, stripe_signature)
 
 
 @router.post("", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
@@ -32,6 +49,15 @@ def create_new_payment(
         status="PENDING",
     )
     return create_payment(enforced_payload)
+
+
+@router.post("/{payment_id}/checkout-session", response_model=CheckoutSessionResponse)
+def create_payment_checkout_session(
+    payment_id: str,
+    current_user=Depends(require_roles("PATIENT", "ADMIN")),
+):
+    ensure_payment_owner_or_admin(payment_id, current_user)
+    return create_checkout_session(payment_id)
 
 
 @router.get("/appointment/{appointment_id}", response_model=PaymentResponse)

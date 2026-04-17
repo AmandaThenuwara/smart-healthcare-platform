@@ -8,8 +8,9 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import PatientShell from "./PatientShell";
 import {
+  clearStoredPatientProfile,
   createPatientProfile,
-  getStoredPatientProfile,
+  getMyPatientProfile,
   setStoredPatientProfile,
   updatePatientProfile,
 } from "../../api/patientApi";
@@ -41,6 +42,24 @@ function extractUserId(user: unknown): string {
   return "";
 }
 
+function buildEmptyForm(
+  userId: string,
+  fullName: string,
+  email: string
+): PatientFormState {
+  return {
+    userId,
+    fullName,
+    email,
+    phone: "",
+    dateOfBirth: "",
+    gender: "",
+    address: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+  };
+}
+
 function mapPatientToForm(patient: PatientProfile): PatientFormState {
   return {
     userId: patient.userId,
@@ -55,43 +74,74 @@ function mapPatientToForm(patient: PatientProfile): PatientFormState {
   };
 }
 
+function getErrorStatus(error: unknown): number | null {
+  if (
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    error.response &&
+    typeof error.response === "object" &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+  ) {
+    return error.response.status;
+  }
+
+  return null;
+}
+
 export default function PatientProfilePage() {
   const { user } = useAuth();
   const initialUserId = useMemo(() => extractUserId(user), [user]);
+  const initialFullName = user?.fullName || "";
+  const initialEmail = user?.email || "";
 
   const [existingPatient, setExistingPatient] = useState<PatientProfile | null>(null);
-  const [form, setForm] = useState<PatientFormState>({
-    userId: initialUserId,
-    fullName: user?.fullName || "",
-    email: user?.email || "",
-    phone: "",
-    dateOfBirth: "",
-    gender: "",
-    address: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-  });
+  const [form, setForm] = useState<PatientFormState>(
+    buildEmptyForm(initialUserId, initialFullName, initialEmail)
+  );
 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   useEffect(() => {
-    const storedPatient = getStoredPatientProfile();
+    async function loadPatientProfile() {
+      setError("");
+      setMessage("");
+      setIsLoadingProfile(true);
 
-    if (storedPatient) {
-      setExistingPatient(storedPatient);
-      setForm(mapPatientToForm(storedPatient));
-      return;
+      if (!initialUserId) {
+        setExistingPatient(null);
+        setForm(buildEmptyForm(initialUserId, initialFullName, initialEmail));
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const patient = await getMyPatientProfile();
+        setStoredPatientProfile(patient);
+        setExistingPatient(patient);
+        setForm(mapPatientToForm(patient));
+      } catch (error: unknown) {
+        const statusCode = getErrorStatus(error);
+
+        if (statusCode === 404) {
+          clearStoredPatientProfile();
+          setExistingPatient(null);
+          setForm(buildEmptyForm(initialUserId, initialFullName, initialEmail));
+        } else {
+          console.error(error);
+          setError("Failed to load patient profile");
+        }
+      } finally {
+        setIsLoadingProfile(false);
+      }
     }
 
-    setForm((prev) => ({
-      ...prev,
-      userId: prev.userId || initialUserId,
-      fullName: prev.fullName || user?.fullName || "",
-      email: prev.email || user?.email || "",
-    }));
-  }, [initialUserId, user]);
+    void loadPatientProfile();
+  }, [initialUserId, initialFullName, initialEmail]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -147,150 +197,154 @@ export default function PatientProfilePage() {
   return (
     <PatientShell
       title="Patient Profile"
-      subtitle="Create the patient profile first. The frontend will temporarily store it for reports and notifications."
+      subtitle="Your saved patient profile is loaded from the backend whenever you log in."
     >
       <div style={cardStyle}>
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={twoColumnGridStyle}>
-            <div>
-              <label style={labelStyle}>User ID</label>
-              <input
-                type="text"
-                value={form.userId}
-                onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                style={inputStyle}
-                placeholder="user_001"
-                required
-                disabled={!!existingPatient || isSubmitting}
-              />
+        {isLoadingProfile ? (
+          <p style={infoTextStyle}>Loading patient profile...</p>
+        ) : (
+          <form onSubmit={handleSubmit} style={formStyle}>
+            <div style={twoColumnGridStyle}>
+              <div>
+                <label style={labelStyle}>User ID</label>
+                <input
+                  type="text"
+                  value={form.userId}
+                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
+                  style={inputStyle}
+                  placeholder="user_001"
+                  required
+                  disabled={!!existingPatient || isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  style={inputStyle}
+                  placeholder="patient@example.com"
+                  required
+                  disabled={!!existingPatient || isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Full Name</label>
+                <input
+                  type="text"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  style={inputStyle}
+                  placeholder="John Doe"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  style={inputStyle}
+                  placeholder="0771234567"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Date of Birth</label>
+                <input
+                  type="date"
+                  value={form.dateOfBirth}
+                  onChange={(e) =>
+                    setForm({ ...form, dateOfBirth: e.target.value })
+                  }
+                  style={inputStyle}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Gender</label>
+                <input
+                  type="text"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                  style={inputStyle}
+                  placeholder="Male"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Emergency Contact Name</label>
+                <input
+                  type="text"
+                  value={form.emergencyContactName}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactName: e.target.value })
+                  }
+                  style={inputStyle}
+                  placeholder="Jane Doe"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Emergency Contact Phone</label>
+                <input
+                  type="text"
+                  value={form.emergencyContactPhone}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactPhone: e.target.value })
+                  }
+                  style={inputStyle}
+                  placeholder="0777654321"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                style={inputStyle}
-                placeholder="patient@example.com"
-                required
-                disabled={!!existingPatient || isSubmitting}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Full Name</label>
-              <input
-                type="text"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                style={inputStyle}
-                placeholder="John Doe"
+            <div style={{ marginTop: "16px" }}>
+              <label style={labelStyle}>Address</label>
+              <textarea
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                style={textareaStyle}
+                placeholder="123 Main Street, Colombo"
                 required
                 disabled={isSubmitting}
               />
             </div>
 
-            <div>
-              <label style={labelStyle}>Phone</label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                style={inputStyle}
-                placeholder="0771234567"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+            {existingPatient && (
+              <div style={infoBoxStyle}>
+                <strong>Current patientId:</strong> {existingPatient.patientId}
+              </div>
+            )}
 
-            <div>
-              <label style={labelStyle}>Date of Birth</label>
-              <input
-                type="date"
-                value={form.dateOfBirth}
-                onChange={(e) =>
-                  setForm({ ...form, dateOfBirth: e.target.value })
-                }
-                style={inputStyle}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+            {error && <p style={errorStyle}>{error}</p>}
+            {message && <p style={successStyle}>{message}</p>}
 
-            <div>
-              <label style={labelStyle}>Gender</label>
-              <input
-                type="text"
-                value={form.gender}
-                onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                style={inputStyle}
-                placeholder="Male"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Emergency Contact Name</label>
-              <input
-                type="text"
-                value={form.emergencyContactName}
-                onChange={(e) =>
-                  setForm({ ...form, emergencyContactName: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="Jane Doe"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Emergency Contact Phone</label>
-              <input
-                type="text"
-                value={form.emergencyContactPhone}
-                onChange={(e) =>
-                  setForm({ ...form, emergencyContactPhone: e.target.value })
-                }
-                style={inputStyle}
-                placeholder="0777654321"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginTop: "16px" }}>
-            <label style={labelStyle}>Address</label>
-            <textarea
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              style={textareaStyle}
-              placeholder="123 Main Street, Colombo"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {existingPatient && (
-            <div style={infoBoxStyle}>
-              <strong>Current patientId:</strong> {existingPatient.patientId}
-            </div>
-          )}
-
-          {error && <p style={errorStyle}>{error}</p>}
-          {message && <p style={successStyle}>{message}</p>}
-
-          <button type="submit" style={buttonStyle} disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : existingPatient
+            <button type="submit" style={buttonStyle} disabled={isSubmitting}>
+              {isSubmitting
+                ? "Saving..."
+                : existingPatient
                 ? "Update Patient Profile"
                 : "Create Patient Profile"}
-          </button>
-        </form>
+            </button>
+          </form>
+        )}
       </div>
     </PatientShell>
   );
@@ -359,6 +413,11 @@ const infoBoxStyle: CSSProperties = {
   background: "#eff6ff",
   color: "#1e3a8a",
   borderRadius: "10px",
+};
+
+const infoTextStyle: CSSProperties = {
+  margin: 0,
+  color: "#374151",
 };
 
 const errorStyle: CSSProperties = {

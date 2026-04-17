@@ -1,5 +1,10 @@
 import { createAuthorizedApi } from "./apiClient";
-import type { CreatePaymentPayload, Payment, PaymentStatus } from "../types/payment";
+import type {
+  CheckoutSessionResponse,
+  CreatePaymentPayload,
+  Payment,
+  PaymentStatus,
+} from "../types/payment";
 
 const PAYMENT_SERVICE_URL = (
   import.meta.env.VITE_PAYMENT_SERVICE_URL || "http://127.0.0.1:8006"
@@ -13,6 +18,13 @@ export async function createPayment(
   payload: CreatePaymentPayload
 ): Promise<Payment> {
   const response = await paymentApi.post("/payments", payload);
+  return response.data;
+}
+
+export async function createStripeCheckoutSession(
+  paymentId: string
+): Promise<CheckoutSessionResponse> {
+  const response = await paymentApi.post(`/payments/${paymentId}/checkout-session`);
   return response.data;
 }
 

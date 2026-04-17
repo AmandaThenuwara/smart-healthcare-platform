@@ -17,3 +17,7 @@ MONGO_AUTH_SOURCE = os.getenv("MONGO_AUTH_SOURCE", "admin")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_change_this_before_production")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
