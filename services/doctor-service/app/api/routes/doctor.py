@@ -42,11 +42,10 @@ def create_doctor(
         return create_doctor_profile(payload)
 
     enforced_payload = DoctorProfileCreate(
-        **payload.model_dump(exclude={"userId", "fullName", "email", "approvalStatus"}),
+        **payload.model_dump(exclude={"userId", "fullName", "email"}),
         userId=str(current_user["_id"]),
         fullName=current_user.get("fullName", ""),
         email=current_user.get("email", ""),
-        approvalStatus="PENDING",
     )
     return create_doctor_profile(enforced_payload)
 
@@ -86,11 +85,5 @@ def update_doctor(
 
     if current_user.get("role") != "ADMIN" and profile["userId"] != str(current_user["_id"]):
         raise HTTPException(status_code=403, detail="You do not have permission to update this doctor profile")
-
-    if current_user.get("role") != "ADMIN":
-        sanitized_payload = DoctorProfileUpdate(
-            **payload.model_dump(exclude={"approvalStatus"})
-        )
-        return update_doctor_profile(doctor_id, sanitized_payload)
 
     return update_doctor_profile(doctor_id, payload)

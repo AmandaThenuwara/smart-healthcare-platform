@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.dependencies import ensure_resource_owner_or_admin, require_roles
 from app.schemas.patient_schema import (
@@ -9,6 +9,7 @@ from app.schemas.patient_schema import (
 from app.services.patient_service import (
     create_patient_profile,
     get_patient_profile,
+    get_patient_profile_by_user_id,
     update_patient_profile,
 )
 
@@ -44,6 +45,19 @@ def create_patient(
         email=current_user.get("email", ""),
     )
     return create_patient_profile(enforced_payload)
+
+
+@router.get("/me", response_model=PatientProfileResponse)
+def get_my_patient_profile(
+    current_user=Depends(require_roles("PATIENT", "ADMIN")),
+):
+    if current_user.get("role") == "ADMIN":
+        raise HTTPException(
+            status_code=400,
+            detail="Admin does not have a single patient profile. Use specific patient endpoints instead.",
+        )
+
+    return get_patient_profile_by_user_id(str(current_user["_id"]))
 
 
 @router.get("/{patient_id}", response_model=PatientProfileResponse)

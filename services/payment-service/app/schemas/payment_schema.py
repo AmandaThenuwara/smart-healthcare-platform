@@ -20,6 +20,16 @@ class PaymentStatusUpdate(BaseModel):
     status: PaymentStatus
 
 
+class CheckoutSessionResponse(BaseModel):
+    paymentId: str
+    checkoutUrl: str
+    sessionId: str
+
+
+class StripeWebhookResponse(BaseModel):
+    received: bool
+
+
 class PaymentResponse(BaseModel):
     paymentId: str
     appointmentId: str

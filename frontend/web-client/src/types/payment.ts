@@ -21,3 +21,9 @@ export interface CreatePaymentPayload {
   provider: string;
   status: PaymentStatus;
 }
+
+export interface CheckoutSessionResponse {
+  paymentId: string;
+  checkoutUrl: string;
+  sessionId: string;
+}

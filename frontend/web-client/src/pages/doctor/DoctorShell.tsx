@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { clearStoredDoctorProfile } from "../../api/doctorApi";
+import { clearStoredPatientProfile } from "../../api/patientApi";
 import { useAuth } from "../../context/AuthContext";
 
 type DoctorShellProps = {
@@ -17,6 +19,8 @@ export default function DoctorShell({
   const { user, logout } = useAuth();
 
   function handleLogout() {
+    clearStoredPatientProfile();
+    clearStoredDoctorProfile();
     logout();
     navigate("/login", { replace: true });
   }

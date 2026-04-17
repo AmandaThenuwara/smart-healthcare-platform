@@ -47,6 +47,13 @@ def get_patient_profile(patient_id: str):
     return serialize_patient(document)
 
 
+def get_patient_profile_by_user_id(user_id: str):
+    document = get_patients_collection().find_one({"userId": user_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+    return serialize_patient(document)
+
+
 def update_patient_profile(patient_id: str, payload):
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
     if not update_data:
