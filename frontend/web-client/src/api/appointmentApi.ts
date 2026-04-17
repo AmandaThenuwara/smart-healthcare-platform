@@ -1,4 +1,4 @@
-import axios from "axios";
+import { createAuthorizedApi } from "./apiClient";
 import type { Appointment, AppointmentStatus } from "../types/appointment";
 
 const APPOINTMENT_SERVICE_URL = (
@@ -7,12 +7,7 @@ const APPOINTMENT_SERVICE_URL = (
 
 const APPOINTMENT_BASE_URL = `${APPOINTMENT_SERVICE_URL}/api/v1`;
 
-const appointmentApi = axios.create({
-  baseURL: APPOINTMENT_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const appointmentApi = createAuthorizedApi(APPOINTMENT_BASE_URL);
 
 export async function getAppointmentsByDoctor(
   doctorId: string

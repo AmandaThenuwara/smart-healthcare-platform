@@ -1,8 +1,5 @@
-import axios from "axios";
-import type {
-  CreateNotificationPayload,
-  UserNotification,
-} from "../types/notification";
+import { createAuthorizedApi } from "./apiClient";
+import type { CreateNotificationPayload, UserNotification } from "../types/notification";
 
 const NOTIFICATION_SERVICE_URL = (
   import.meta.env.VITE_NOTIFICATION_SERVICE_URL || "http://127.0.0.1:8007"
@@ -10,12 +7,7 @@ const NOTIFICATION_SERVICE_URL = (
 
 const NOTIFICATION_BASE_URL = `${NOTIFICATION_SERVICE_URL}/api/v1`;
 
-const notificationApi = axios.create({
-  baseURL: NOTIFICATION_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const notificationApi = createAuthorizedApi(NOTIFICATION_BASE_URL);
 
 export async function createNotification(
   payload: CreateNotificationPayload
