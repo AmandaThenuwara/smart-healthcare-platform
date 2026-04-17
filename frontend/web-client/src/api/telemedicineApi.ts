@@ -1,4 +1,4 @@
-import axios from "axios";
+import { createAuthorizedApi } from "./apiClient";
 import type {
   CreateTelemedicinePayload,
   TelemedicineSession,
@@ -11,12 +11,7 @@ const TELEMEDICINE_SERVICE_URL = (
 
 const TELEMEDICINE_BASE_URL = `${TELEMEDICINE_SERVICE_URL}/api/v1`;
 
-const telemedicineApi = axios.create({
-  baseURL: TELEMEDICINE_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const telemedicineApi = createAuthorizedApi(TELEMEDICINE_BASE_URL);
 
 export async function createTelemedicineSession(
   payload: CreateTelemedicinePayload

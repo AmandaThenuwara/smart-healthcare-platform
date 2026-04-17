@@ -1,4 +1,4 @@
-import axios from "axios";
+import { createAuthorizedApi } from "./apiClient";
 import type {
   AvailabilitySlot,
   CreateAvailabilityPayload,
@@ -13,12 +13,7 @@ const DOCTOR_SERVICE_URL = (
 
 const DOCTOR_BASE_URL = `${DOCTOR_SERVICE_URL}/api/v1`;
 
-const doctorApi = axios.create({
-  baseURL: DOCTOR_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const doctorApi = createAuthorizedApi(DOCTOR_BASE_URL);
 
 const DOCTOR_PROFILE_STORAGE_KEY = "smart_healthcare_doctor_profile";
 

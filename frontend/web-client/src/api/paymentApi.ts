@@ -1,4 +1,4 @@
-import axios from "axios";
+import { createAuthorizedApi } from "./apiClient";
 import type { CreatePaymentPayload, Payment, PaymentStatus } from "../types/payment";
 
 const PAYMENT_SERVICE_URL = (
@@ -7,12 +7,7 @@ const PAYMENT_SERVICE_URL = (
 
 const PAYMENT_BASE_URL = `${PAYMENT_SERVICE_URL}/api/v1`;
 
-const paymentApi = axios.create({
-  baseURL: PAYMENT_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const paymentApi = createAuthorizedApi(PAYMENT_BASE_URL);
 
 export async function createPayment(
   payload: CreatePaymentPayload
