@@ -142,7 +142,7 @@ export default function DoctorDashboardPage() {
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black group-hover:scale-110 transition-transform">
                        <Calendar size={20} />
                     </div>
-                    <span className="font-bold text-sm text-gray-800 group-hover:text-white transition-colors">Apointment Queue</span>
+                    <span className="font-bold text-sm text-gray-800 group-hover:text-white transition-colors">Appointment Queue</span>
                  </div>
                  <ArrowRight size={18} className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
