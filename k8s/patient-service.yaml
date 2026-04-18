@@ -1,0 +1,81 @@
+# =====================================================================
+#  Patient Service – Kubernetes Deployment + Service
+# =====================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: healthcare
+  labels:
+    app: patient-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+        - name: patient-service
+          image: ghcr.io/YOUR_GITHUB_ORG/patient-service:latest
+          ports:
+            - containerPort: 8002
+          env:
+            - name: PORT
+              value: "8002"
+            - name: APP_NAME
+              value: "patient-service"
+            - name: DATABASE_NAME
+              value: "patient_db"
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-config
+                  key: CORS_ORIGINS
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_URI
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_PASSWORD
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: uploads
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service
+  namespace: healthcare
+spec:
+  selector:
+    app: patient-service
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP

@@ -1,0 +1,75 @@
+# =====================================================================
+#  Doctor Service – Kubernetes Deployment + Service
+# =====================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-service
+  namespace: healthcare
+  labels:
+    app: doctor-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doctor-service
+  template:
+    metadata:
+      labels:
+        app: doctor-service
+    spec:
+      containers:
+        - name: doctor-service
+          image: ghcr.io/YOUR_GITHUB_ORG/doctor-service:latest
+          ports:
+            - containerPort: 8003
+          env:
+            - name: PORT
+              value: "8003"
+            - name: APP_NAME
+              value: "doctor-service"
+            - name: DATABASE_NAME
+              value: "doctor_db"
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-config
+                  key: CORS_ORIGINS
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_URI
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-secrets
+                  key: MONGO_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-service
+  namespace: healthcare
+spec:
+  selector:
+    app: doctor-service
+  ports:
+    - protocol: TCP
+      port: 8003
+      targetPort: 8003
+  type: ClusterIP

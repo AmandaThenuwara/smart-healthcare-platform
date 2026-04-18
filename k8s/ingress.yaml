@@ -1,0 +1,86 @@
+# =====================================================================
+#  Kubernetes Ingress – Routes external traffic to each service
+#  Requires: nginx ingress controller installed in cluster
+#
+#  Install nginx ingress:
+#    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+# =====================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: healthcare-ingress
+  namespace: healthcare
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.your-domain.com     # ⚠️  Replace with your actual domain
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8001
+
+          - path: /patient
+            pathType: Prefix
+            backend:
+              service:
+                name: patient-service
+                port:
+                  number: 8002
+
+          - path: /doctor
+            pathType: Prefix
+            backend:
+              service:
+                name: doctor-service
+                port:
+                  number: 8003
+
+          - path: /appointment
+            pathType: Prefix
+            backend:
+              service:
+                name: appointment-service
+                port:
+                  number: 8004
+
+          - path: /telemedicine
+            pathType: Prefix
+            backend:
+              service:
+                name: telemedicine-service
+                port:
+                  number: 8005
+
+          - path: /payment
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-service
+                port:
+                  number: 8006
+
+          - path: /notification
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8007
+
+          - path: /symptom
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-symptom-service
+                port:
+                  number: 8008

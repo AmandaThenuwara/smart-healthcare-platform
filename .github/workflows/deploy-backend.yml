@@ -1,0 +1,119 @@
+# =====================================================================
+#  GitHub Actions CI/CD Pipeline
+#  Builds Docker images for all microservices and pushes to GHCR
+#  Then applies updated Kubernetes manifests to the cluster
+#
+#  Required GitHub Secrets:
+#    KUBE_CONFIG     → base64-encoded kubeconfig file
+#    GHCR_TOKEN      → GitHub Personal Access Token with write:packages
+# =====================================================================
+
+name: Build & Deploy Backend Services
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "services/**"
+      - "k8s/**"
+      - ".github/workflows/deploy-backend.yml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  # ── Build & Push Docker Images ──────────────────────────────────────
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - patient-service
+          - doctor-service
+          - appointment-service
+          - telemedicine-service
+          - payment-service
+          - notification-service
+          - ai-symptom-service
+          - gateway
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ── Deploy to Kubernetes ────────────────────────────────────────────
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+
+      - name: Update image tags in manifests
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          sed -i "s|:latest|:${SHORT_SHA}|g" k8s/*.yaml
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/auth-service.yaml
+          kubectl apply -f k8s/patient-service.yaml
+          kubectl apply -f k8s/doctor-service.yaml
+          kubectl apply -f k8s/services.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/auth-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/patient-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/doctor-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/appointment-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/telemedicine-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/payment-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/notification-service -n healthcare --timeout=120s
+          kubectl rollout status deployment/ai-symptom-service -n healthcare --timeout=120s

@@ -1,0 +1,230 @@
+# =====================================================================
+#  Smart Healthcare Platform – Docker Compose (Local Development)
+#  Usage:  docker-compose up --build
+# =====================================================================
+
+version: "3.9"
+
+services:
+  # ── MongoDB ───────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    container_name: healthcare-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - healthcare-net
+
+  # ── Gateway ───────────────────────────────────────────────────────
+  gateway:
+    build:
+      context: ./services/gateway
+    container_name: gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      APP_NAME: gateway
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Auth Service ──────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      APP_NAME: auth-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: auth_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      JWT_SECRET: change_this_in_production
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Patient Service ───────────────────────────────────────────────
+  patient-service:
+    build:
+      context: ./services/patient-service
+    container_name: patient-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      PORT: 8002
+      APP_NAME: patient-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: patient_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    volumes:
+      - patient_uploads:/app/uploads
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Doctor Service ────────────────────────────────────────────────
+  doctor-service:
+    build:
+      context: ./services/doctor-service
+    container_name: doctor-service
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
+      APP_NAME: doctor-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: doctor_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Appointment Service ───────────────────────────────────────────
+  appointment-service:
+    build:
+      context: ./services/appointment-service
+    container_name: appointment-service
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      PORT: 8004
+      APP_NAME: appointment-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: appointment_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Telemedicine Service ──────────────────────────────────────────
+  telemedicine-service:
+    build:
+      context: ./services/telemedicine-service
+    container_name: telemedicine-service
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      PORT: 8005
+      APP_NAME: telemedicine-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: telemedicine_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Payment Service ───────────────────────────────────────────────
+  payment-service:
+    build:
+      context: ./services/payment-service
+    container_name: payment-service
+    restart: unless-stopped
+    ports:
+      - "8006:8006"
+    environment:
+      PORT: 8006
+      APP_NAME: payment-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: payment_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      STRIPE_SECRET_KEY: sk_test_change_me
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── Notification Service ──────────────────────────────────────────
+  notification-service:
+    build:
+      context: ./services/notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    environment:
+      PORT: 8007
+      APP_NAME: notification-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: notification_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+  # ── AI Symptom Service ────────────────────────────────────────────
+  ai-symptom-service:
+    build:
+      context: ./services/ai-symptom-service
+    container_name: ai-symptom-service
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      PORT: 8008
+      APP_NAME: ai-symptom-service
+      MONGO_URI: mongodb://mongo:27017
+      DATABASE_NAME: ai_symptom_db
+      MONGO_USERNAME: admin
+      MONGO_PASSWORD: admin123
+      MONGO_AUTH_SOURCE: admin
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - mongo
+    networks:
+      - healthcare-net
+
+# ── Volumes ──────────────────────────────────────────────────────────
+volumes:
+  mongo_data:
+  patient_uploads:
+
+# ── Networks ─────────────────────────────────────────────────────────
+networks:
+  healthcare-net:
+    driver: bridge
