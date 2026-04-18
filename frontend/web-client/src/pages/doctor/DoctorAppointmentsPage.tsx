@@ -61,6 +61,7 @@ export default function DoctorAppointmentsPage() {
     Record<string, AppointmentStatus>
   >({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -105,6 +106,7 @@ export default function DoctorAppointmentsPage() {
 
     setError("");
     setMessage("");
+    setIsUpdating(appointmentId);
 
     try {
       const updated = await updateAppointmentStatus(appointmentId, nextStatus);
@@ -123,9 +125,12 @@ export default function DoctorAppointmentsPage() {
       }));
 
       setMessage(`Success: Appointment state migrated to ${updated.status}.`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError(`Error: Failed to synchronize state for ${appointmentId}`);
+      const detail = error.response?.data?.detail;
+      setError(detail || `Error: Failed to synchronize state for ${appointmentId}`);
+    } finally {
+      setIsUpdating(null);
     }
   }
 
@@ -135,7 +140,7 @@ export default function DoctorAppointmentsPage() {
       subtitle="View and manage patient visitation requests and consultation lifecycle."
     >
       {!doctorId ? (
-        <div className="card-premium text-center py-20 bg-white border border-gray-100 animate-in zoom-in duration-500">
+        <div className="card-premium text-center py-20 bg-white border border-gray-100 shadow-sm">
            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300 mb-6">
               <Calendar size={32} />
            </div>
@@ -144,7 +149,7 @@ export default function DoctorAppointmentsPage() {
            <Link to="/doctor/profile" className="btn-primary mt-8 inline-flex px-8 py-4 text-xs font-bold uppercase tracking-widest">Setup Profile</Link>
         </div>
       ) : (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
              <div className="flex items-center gap-4">
                 <div className="px-4 py-2 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl">
@@ -161,7 +166,7 @@ export default function DoctorAppointmentsPage() {
           </div>
 
           {(error || message) && (
-             <div className="animate-in slide-in-from-top-4 duration-300">
+             <div className="space-y-2">
                 {error && <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-black font-bold text-[10px] uppercase tracking-widest flex items-center gap-3"><AlertCircle size={14} /> {error}</div>}
                 {message && <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 font-bold text-[10px] uppercase tracking-widest flex items-center gap-3"><CheckCircle2 size={14} /> {message}</div>}
              </div>
@@ -249,12 +254,13 @@ export default function DoctorAppointmentsPage() {
                             </select>
                             <ChevronRight size={14} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 rotate-90" />
                          </div>
-                         <button
-                            onClick={() => void handleStatusUpdate(appointment.appointmentId)}
-                            className="bg-black text-white px-8 py-4 rounded-[1.25rem] text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-black/10 hover:shadow-2xl transition-all shrink-0"
-                         >
-                            Update State
-                         </button>
+                          <button
+                             onClick={() => void handleStatusUpdate(appointment.appointmentId)}
+                             className="bg-black text-white px-8 py-4 rounded-[1.25rem] text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-black/10 transition-all shrink-0 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                             disabled={isUpdating === appointment.appointmentId}
+                          >
+                             {isUpdating === appointment.appointmentId ? "Syncing..." : "Update State"}
+                          </button>
                       </div>
 
                       {/* History Log */}
