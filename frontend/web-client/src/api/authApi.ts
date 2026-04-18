@@ -6,9 +6,8 @@ import type {
   UserProfile,
 } from "../types/auth";
 
-const AUTH_SERVICE_URL = (
-  import.meta.env.VITE_AUTH_SERVICE_URL || "http://127.0.0.1:8001"
-).replace(/\/$/, "");
+const _rawAuthUrl = import.meta.env.VITE_AUTH_SERVICE_URL || "http://127.0.0.1:8001";
+const AUTH_SERVICE_URL = (_rawAuthUrl.startsWith("http") ? _rawAuthUrl : `https://${_rawAuthUrl}`).replace(/\/$/, "");
 
 const AUTH_BASE_URL = `${AUTH_SERVICE_URL}/api/v1/auth`;
 

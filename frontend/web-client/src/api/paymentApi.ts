@@ -6,9 +6,8 @@ import type {
   PaymentStatus,
 } from "../types/payment";
 
-const PAYMENT_SERVICE_URL = (
-  import.meta.env.VITE_PAYMENT_SERVICE_URL || "http://127.0.0.1:8006"
-).replace(/\/$/, "");
+const _rawPaymentUrl = import.meta.env.VITE_PAYMENT_SERVICE_URL || "http://127.0.0.1:8006";
+const PAYMENT_SERVICE_URL = (_rawPaymentUrl.startsWith("http") ? _rawPaymentUrl : `https://${_rawPaymentUrl}`).replace(/\/$/, "");
 
 const PAYMENT_BASE_URL = `${PAYMENT_SERVICE_URL}/api/v1`;
 

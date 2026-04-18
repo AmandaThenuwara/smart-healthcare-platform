@@ -5,9 +5,8 @@ import type {
   CreateAppointmentPayload,
 } from "../types/appointment";
 
-const APPOINTMENT_SERVICE_URL = (
-  import.meta.env.VITE_APPOINTMENT_SERVICE_URL || "http://127.0.0.1:8004"
-).replace(/\/$/, "");
+const _rawAppointmentUrl = import.meta.env.VITE_APPOINTMENT_SERVICE_URL || "http://127.0.0.1:8004";
+const APPOINTMENT_SERVICE_URL = (_rawAppointmentUrl.startsWith("http") ? _rawAppointmentUrl : `https://${_rawAppointmentUrl}`).replace(/\/$/, "");
 
 const APPOINTMENT_BASE_URL = `${APPOINTMENT_SERVICE_URL}/api/v1`;
 

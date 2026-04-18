@@ -1,9 +1,8 @@
 import { createAuthorizedApi } from "./apiClient";
 import type { CreateNotificationPayload, UserNotification } from "../types/notification";
 
-const NOTIFICATION_SERVICE_URL = (
-  import.meta.env.VITE_NOTIFICATION_SERVICE_URL || "http://127.0.0.1:8007"
-).replace(/\/$/, "");
+const _rawNotificationUrl = import.meta.env.VITE_NOTIFICATION_SERVICE_URL || "http://127.0.0.1:8007";
+const NOTIFICATION_SERVICE_URL = (_rawNotificationUrl.startsWith("http") ? _rawNotificationUrl : `https://${_rawNotificationUrl}`).replace(/\/$/, "");
 
 const NOTIFICATION_BASE_URL = `${NOTIFICATION_SERVICE_URL}/api/v1`;
 

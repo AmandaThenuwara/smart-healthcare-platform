@@ -5,9 +5,8 @@ import type {
   TelemedicineStatus,
 } from "../types/telemedicine";
 
-const TELEMEDICINE_SERVICE_URL = (
-  import.meta.env.VITE_TELEMEDICINE_SERVICE_URL || "http://127.0.0.1:8005"
-).replace(/\/$/, "");
+const _rawTelemedicineUrl = import.meta.env.VITE_TELEMEDICINE_SERVICE_URL || "http://127.0.0.1:8005";
+const TELEMEDICINE_SERVICE_URL = (_rawTelemedicineUrl.startsWith("http") ? _rawTelemedicineUrl : `https://${_rawTelemedicineUrl}`).replace(/\/$/, "");
 
 const TELEMEDICINE_BASE_URL = `${TELEMEDICINE_SERVICE_URL}/api/v1`;
 

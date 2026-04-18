@@ -9,9 +9,8 @@ import type {
   UpdateDoctorPayload,
 } from "../types/doctor";
 
-const DOCTOR_SERVICE_URL = (
-  import.meta.env.VITE_DOCTOR_SERVICE_URL || "http://127.0.0.1:8003"
-).replace(/\/$/, "");
+const _rawDoctorUrl = import.meta.env.VITE_DOCTOR_SERVICE_URL || "http://127.0.0.1:8003";
+const DOCTOR_SERVICE_URL = (_rawDoctorUrl.startsWith("http") ? _rawDoctorUrl : `https://${_rawDoctorUrl}`).replace(/\/$/, "");
 
 const DOCTOR_BASE_URL = `${DOCTOR_SERVICE_URL}/api/v1`;
 

@@ -1,9 +1,8 @@
 import { createAuthorizedApi } from "./apiClient";
 import type { SymptomCheck, SymptomCheckCreatePayload } from "../types/symptom";
 
-const AI_SYMPTOM_SERVICE_URL = (
-  import.meta.env.VITE_AI_SYMPTOM_SERVICE_URL || "http://127.0.0.1:8008"
-).replace(/\/$/, "");
+const _rawAiSymptomUrl = import.meta.env.VITE_AI_SYMPTOM_SERVICE_URL || "http://127.0.0.1:8008";
+const AI_SYMPTOM_SERVICE_URL = (_rawAiSymptomUrl.startsWith("http") ? _rawAiSymptomUrl : `https://${_rawAiSymptomUrl}`).replace(/\/$/, "");
 
 const AI_SYMPTOM_BASE_URL = `${AI_SYMPTOM_SERVICE_URL}/api/v1`;
 

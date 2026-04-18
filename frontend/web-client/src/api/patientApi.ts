@@ -7,9 +7,8 @@ import type {
   UpdatePatientPayload,
 } from "../types/patient";
 
-const PATIENT_SERVICE_URL = (
-  import.meta.env.VITE_PATIENT_SERVICE_URL || "http://127.0.0.1:8002"
-).replace(/\/$/, "");
+const _rawPatientUrl = import.meta.env.VITE_PATIENT_SERVICE_URL || "http://127.0.0.1:8002";
+const PATIENT_SERVICE_URL = (_rawPatientUrl.startsWith("http") ? _rawPatientUrl : `https://${_rawPatientUrl}`).replace(/\/$/, "");
 
 const PATIENT_BASE_URL = `${PATIENT_SERVICE_URL}/api/v1`;
 
