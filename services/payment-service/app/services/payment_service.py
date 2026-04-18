@@ -225,20 +225,22 @@ def _apply_payment_status_change(
         {"$set": updates},
     )
 
-    appointment = _get_appointment_or_404(payment["appointmentId"])
-
-    if new_status == "PAID":
-        refreshed_appointment = _get_appointment_or_404(payment["appointmentId"])
-        if refreshed_appointment.get("status") == "PAYMENT_PENDING":
-            _append_appointment_status(refreshed_appointment, "CONFIRMED")
-            appointment = _get_appointment_or_404(payment["appointmentId"])
-
-    updated = get_payments_collection().find_one({"_id": payment["_id"]})
-
+    # Wrap these in try/except to prevent 500 errors if cross-db or notifications fail
     try:
+        appointment = _get_appointment_or_404(payment["appointmentId"])
+
+        if new_status == "PAID":
+            refreshed_appointment = _get_appointment_or_404(payment["appointmentId"])
+            if refreshed_appointment.get("status") == "PAYMENT_PENDING":
+                _append_appointment_status(refreshed_appointment, "CONFIRMED")
+                appointment = _get_appointment_or_404(payment["appointmentId"])
+
+        updated = get_payments_collection().find_one({"_id": payment["_id"]})
         _dispatch_payment_notifications(updated, appointment, current_status, new_status)
     except Exception as exc:
-        print(f"[stripe-webhook] notification dispatch failed: {exc}")
+        print(f"[payment-service] Supplemental tasks (appointment update/notifications) failed: {exc}")
+        # We still want to return the updated payment because we already saved it to MONGO
+        updated = get_payments_collection().find_one({"_id": payment["_id"]})
 
     return serialize_payment(updated)
 
