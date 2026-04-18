@@ -19,13 +19,10 @@ import { getAppointmentsByDoctor } from "../../api/appointmentApi";
 import LifePulseIcon from "../../assets/img/LifePulse icon.png";
 
 const StatCard = ({ label, value, icon: Icon }: any) => (
-  <div className="card-premium flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+  <div className="card-premium flex flex-col justify-between border border-gray-100 shadow-sm">
     <div className="flex items-center justify-between mb-4">
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-100 group-hover:bg-black group-hover:text-white transition-all duration-300 shadow-sm">
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-100 shadow-sm text-black">
         <Icon size={24} />
-      </div>
-      <div className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
-        <ChevronRight size={20} />
       </div>
     </div>
     <div>
@@ -78,7 +75,7 @@ export default function DoctorDashboardPage() {
       subtitle="Manage your profile, maintain your availability, and handle appointment requests."
     >
       {!doctorId ? (
-        <div className="card-premium text-center py-16 space-y-6 animate-in zoom-in duration-500 border border-gray-100">
+        <div className="card-premium text-center py-16 space-y-6 border border-gray-100">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-black">
             <User size={40} />
           </div>
@@ -89,14 +86,14 @@ export default function DoctorDashboardPage() {
             </p>
           </div>
           <div className="pt-4">
-            <Link to="/doctor/profile" className="btn-primary inline-flex items-center gap-2 group">
+            <Link to="/doctor/profile" className="btn-primary inline-flex items-center gap-2">
               Complete Profile
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={18} />
             </Link>
           </div>
         </div>
       ) : (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard label="Doctor Name" value={doctorName} icon={User} />
@@ -115,34 +112,34 @@ export default function DoctorDashboardPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link to="/doctor/profile" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-black group transition-all duration-300 border border-transparent shadow-sm">
+              <Link to="/doctor/profile" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent shadow-sm">
                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black">
                        <User size={20} />
                     </div>
-                    <span className="font-bold text-sm text-gray-800 group-hover:text-white transition-colors">Manage Profile</span>
+                    <span className="font-bold text-sm text-gray-800">Manage Profile</span>
                  </div>
-                 <ArrowRight size={18} className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                 <ArrowRight size={18} className="text-gray-400" />
               </Link>
 
-              <Link to="/doctor/availability" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-black group transition-all duration-300 border border-transparent shadow-sm">
+              <Link to="/doctor/availability" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent shadow-sm">
                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black">
                        <Clock size={20} />
                     </div>
-                    <span className="font-bold text-sm text-gray-800 group-hover:text-white transition-colors">Maintain Schedule</span>
+                    <span className="font-bold text-sm text-gray-800">Maintain Schedule</span>
                  </div>
-                 <ArrowRight size={18} className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                 <ArrowRight size={18} className="text-gray-400" />
               </Link>
 
-              <Link to="/doctor/appointments" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-black group transition-all duration-300 border border-transparent shadow-sm">
+              <Link to="/doctor/appointments" className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent shadow-sm">
                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black">
                        <Calendar size={20} />
                     </div>
-                    <span className="font-bold text-sm text-gray-800 group-hover:text-white transition-colors">Appointment Queue</span>
+                    <span className="font-bold text-sm text-gray-800">Appointment Queue</span>
                  </div>
-                 <ArrowRight size={18} className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                 <ArrowRight size={18} className="text-gray-400" />
               </Link>
             </div>
           </div>
