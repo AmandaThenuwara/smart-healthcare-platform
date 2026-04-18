@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-load_dotenv(BASE_DIR / ".env", override=True, encoding="utf-8")
+# load_dotenv(BASE_DIR / ".env", override=True, encoding="utf-8")
 
 APP_NAME = os.getenv("APP_NAME", "ai-symptom-service")
 PORT = int(os.getenv("PORT", 8008))
@@ -19,4 +19,4 @@ JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_change_this_before_production
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")

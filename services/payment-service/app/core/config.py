@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-load_dotenv(BASE_DIR / ".env", override=True, encoding="utf-8")
+# load_dotenv(BASE_DIR / ".env", override=True, encoding="utf-8")
 
 APP_NAME = os.getenv("APP_NAME", "payment-service")
 PORT = int(os.getenv("PORT", 8006))
