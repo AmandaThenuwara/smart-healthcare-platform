@@ -45,36 +45,37 @@ def _insert_notification(user_id: str, title: str, message: str, notification_ty
 
 
 def _send_email_task(resolved_host, port, username, password, use_tls, message):
-    try:
-        if port == 465:
-            with smtplib.SMTP_SSL(resolved_host, port, timeout=15) as smtp:
-                smtp.login(username, password)
-                smtp.send_message(message)
-        else:
-            with smtplib.SMTP(resolved_host, port, timeout=15) as smtp:
-                if use_tls:
-                    smtp.starttls()
-                smtp.login(username, password)
-                smtp.send_message(message)
-    except Exception as exc:
-        print(f"[notification-dispatch] primary email send failed to {resolved_host}:{port}: {exc}")
-        if port == 465:
-            try:
-                with smtplib.SMTP(resolved_host, 587, timeout=15) as smtp:
-                    smtp.starttls()
+    # The "Port Hunter" - tries all standard SMTP ports to find the one Railway hasn't blocked
+    ports_to_try = [port, 587, 465, 2525, 25]
+    ports_to_try = list(dict.fromkeys(ports_to_try)) # Remove duplicates
+
+    last_error = ""
+
+    for attempt_port in ports_to_try:
+        try:
+            print(f"[notification-dispatch] hunter checking port {attempt_port}...")
+            if attempt_port == 465:
+                with smtplib.SMTP_SSL(resolved_host, attempt_port, timeout=8) as smtp:
                     smtp.login(username, password)
                     smtp.send_message(message)
-                print("[notification-dispatch] fallback to 587 successful!")
-            except Exception:
-                pass
-        elif port == 587:
-            try:
-                with smtplib.SMTP_SSL(resolved_host, 465, timeout=15) as smtp:
+                    print(f"[notification-dispatch] email SENT via port {attempt_port}! 🎉")
+                    return
+            else:
+                with smtplib.SMTP(resolved_host, attempt_port, timeout=8) as smtp:
+                    try:
+                        smtp.starttls()
+                    except Exception:
+                        pass
                     smtp.login(username, password)
                     smtp.send_message(message)
-                print("[notification-dispatch] fallback to 465 successful!")
-            except Exception:
-                pass
+                    print(f"[notification-dispatch] email SENT via port {attempt_port}! 🎉")
+                    return
+        except Exception as exc:
+            last_error = str(exc)
+            print(f"[notification-dispatch] port {attempt_port} blocked or failed: {last_error}")
+
+    print(f"[notification-dispatch] ❌ ALL PORTS BLOCKED. Final error: {last_error}")
+    print("[notification-dispatch] RECOMMENDATION: Railway is likely blocking all standard SMTP. To fix this permanently, use a Mail API like SendGrid or Resend via HTTP instead of Gmail SMTP.")
 
 
 def _send_email(to_email: str, subject: str, body: str):
