@@ -1,5 +1,6 @@
 import os
 import smtplib
+import socket
 from datetime import datetime, timezone
 from email.message import EmailMessage
 
@@ -64,21 +65,28 @@ def _send_email(to_email: str, subject: str, body: str):
     message["Subject"] = subject
     message.set_content(body)
 
+    # Force IPv4 resolution to prevent "Network is unreachable" in IPv6-hostile environments
+    try:
+        resolved_host = socket.gethostbyname(host)
+    except Exception as dns_exc:
+        print(f"[notification-dispatch] DNS resolution failed for {host}: {dns_exc}")
+        resolved_host = host
+
     try:
         if port == 465:
             # Use SSL for port 465
-            with smtplib.SMTP_SSL(host, port, timeout=20) as smtp:
+            with smtplib.SMTP_SSL(resolved_host, port, timeout=20) as smtp:
                 smtp.login(username, password)
                 smtp.send_message(message)
         else:
             # Use STARTTLS for 587 or others
-            with smtplib.SMTP(host, port, timeout=20) as smtp:
+            with smtplib.SMTP(resolved_host, port, timeout=20) as smtp:
                 if use_tls:
                     smtp.starttls()
                 smtp.login(username, password)
                 smtp.send_message(message)
     except Exception as exc:
-        print(f"[notification-dispatch] email send failed: {exc}")
+        print(f"[notification-dispatch] email send failed to {resolved_host} ({host}): {exc}")
 
 
 def dispatch_notification(
