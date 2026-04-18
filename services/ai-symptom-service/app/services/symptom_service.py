@@ -130,10 +130,13 @@ def create_symptom_check(payload, patient_id: str, user_id: str):
     }
 
     try:
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=OPENAI_MODEL,
-            instructions=SYSTEM_INSTRUCTIONS,
-            input=f"Patient symptom input:\n{json.dumps(symptom_payload, ensure_ascii=False)}",
+            messages=[
+                {"role": "system", "content": SYSTEM_INSTRUCTIONS},
+                {"role": "user", "content": f"Patient symptom input:\n{json.dumps(symptom_payload, ensure_ascii=False)}"}
+            ],
+            response_format={"type": "json_object"}
         )
     except Exception as exc:
         raise HTTPException(
@@ -141,7 +144,7 @@ def create_symptom_check(payload, patient_id: str, user_id: str):
             detail=f"OpenAI request failed: {str(exc)}",
         ) from exc
 
-    raw_output = (response.output_text or "").strip()
+    raw_output = (response.choices[0].message.content or "").strip()
     parsed = _extract_json_object(raw_output)
     normalized = _normalize_result(parsed)
 
