@@ -3,16 +3,7 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add all service directories to the path so we can import them
-current_dir = os.path.dirname(os.path.abspath(__file__))
-services_dir = os.path.join(current_dir, "services")
-for service in os.listdir(services_dir):
-    service_path = os.path.join(services_dir, service)
-    if os.path.isdir(service_path):
-        sys.path.append(service_path)
-
-# Import all routers
-# Note: We import the specific routers to avoid collisions
+# Import all routers using the new underscore folder names
 from services.auth_service.app.api.routes.auth import router as auth_router
 from services.patient_service.app.api.routes.patient import router as patient_router
 from services.doctor_service.app.api.routes.doctor import router as doctor_router
@@ -35,7 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include all routers with their correct prefixes
+# Include all routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(patient_router, prefix="/api/v1/patients", tags=["patients"])
 app.include_router(doctor_router, prefix="/api/v1/doctors", tags=["doctors"])
