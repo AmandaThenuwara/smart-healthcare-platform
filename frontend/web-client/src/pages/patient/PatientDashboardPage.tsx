@@ -8,7 +8,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Hash,
-  ChevronRight,
   Plus,
   Stethoscope
 } from "lucide-react";

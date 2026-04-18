@@ -1,20 +1,14 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getStoredPatientProfile } from "../../api/patientApi";
 import {
-  createNotification,
   getNotificationsByUser,
 } from "../../api/notificationApi";
 import type { NotificationType, UserNotification } from "../../types/notification";
 import PatientShell from "./PatientShell";
 
-const NOTIFICATION_TYPES: NotificationType[] = [
-  "APPOINTMENT",
-  "PAYMENT",
-  "CONSULTATION",
-  "GENERAL",
-];
+
 
 function extractUserId(user: unknown): string {
   if (user && typeof user === "object") {

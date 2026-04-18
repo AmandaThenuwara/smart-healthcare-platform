@@ -5,7 +5,6 @@ import {
   Clock, 
   Calendar, 
   ShieldCheck, 
-  ChevronRight, 
   ArrowRight,
   Stethoscope,
   LayoutDashboard
