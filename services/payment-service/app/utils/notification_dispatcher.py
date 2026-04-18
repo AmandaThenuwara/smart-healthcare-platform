@@ -43,7 +43,8 @@ def _insert_notification(user_id: str, title: str, message: str, notification_ty
 
 
 def _send_email(to_email: str, subject: str, body: str):
-    if not _env_bool("EMAIL_NOTIFICATIONS_ENABLED", False):
+    # Default to True if we are attempting to send, but still check if incomplete
+    if not _env_bool("EMAIL_NOTIFICATIONS_ENABLED", True):
         return
 
     host = os.getenv("SMTP_HOST", "smtp.gmail.com")
