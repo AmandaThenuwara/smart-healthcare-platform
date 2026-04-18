@@ -30,6 +30,16 @@ const APPOINTMENT_STATUSES: AppointmentStatus[] = [
   "COMPLETED",
 ];
 
+const DOCTOR_ALLOWED_STATUS_TRANSITIONS: Record<string, Set<AppointmentStatus>> = {
+  "PAYMENT_PENDING": new Set(["REJECTED", "CANCELLED"]),
+  "PENDING": new Set(["CONFIRMED", "REJECTED", "CANCELLED"]),
+  "CONFIRMED": new Set(["COMPLETED", "CANCELLED"]),
+  "REJECTED": new Set(),
+  "RESCHEDULED": new Set(),
+  "CANCELLED": new Set(),
+  "COMPLETED": new Set(),
+};
+
 function sortAppointments(data: Appointment[]) {
   return [...data].sort((a, b) => {
     const first = `${a.date}T${a.timeSlot}`;
@@ -248,12 +258,23 @@ export default function DoctorAppointmentsPage() {
                                }))}
                                className="w-full pl-6 pr-10 py-4 bg-gray-50 border border-transparent rounded-[1.25rem] focus:bg-white focus:ring-8 focus:ring-black/[0.02] focus:border-gray-200 transition-all text-[10px] font-bold uppercase tracking-widest appearance-none cursor-pointer outline-none"
                             >
-                               {APPOINTMENT_STATUSES.map((status) => (
+                               <option value={appointment.status}>{appointment.status} (Current)</option>
+                               {APPOINTMENT_STATUSES.filter(s => {
+                                 const allowed = DOCTOR_ALLOWED_STATUS_TRANSITIONS[appointment.status] || new Set();
+                                 return allowed.has(s);
+                               }).map((status) => (
                                   <option key={status} value={status}>{status}</option>
                                ))}
                             </select>
                             <ChevronRight size={14} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 rotate-90" />
-                         </div>
+                          </div>
+                          {appointment.status === 'PAYMENT_PENDING' && (
+                            <div className="absolute -top-10 left-0 right-0 text-center pointer-events-none">
+                               <span className="px-3 py-1 bg-black text-white text-[8px] font-bold uppercase tracking-widest rounded-full shadow-lg">
+                                  Awaiting Patient Payment
+                               </span>
+                            </div>
+                          )}
                           <button
                              onClick={() => void handleStatusUpdate(appointment.appointmentId)}
                              className="bg-black text-white px-8 py-4 rounded-[1.25rem] text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-black/10 transition-all shrink-0 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
