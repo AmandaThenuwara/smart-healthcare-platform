@@ -65,11 +65,18 @@ def _send_email(to_email: str, subject: str, body: str):
     message.set_content(body)
 
     try:
-        with smtplib.SMTP(host, port, timeout=20) as smtp:
-            if use_tls:
-                smtp.starttls()
-            smtp.login(username, password)
-            smtp.send_message(message)
+        if port == 465:
+            # Use SSL for port 465
+            with smtplib.SMTP_SSL(host, port, timeout=20) as smtp:
+                smtp.login(username, password)
+                smtp.send_message(message)
+        else:
+            # Use STARTTLS for 587 or others
+            with smtplib.SMTP(host, port, timeout=20) as smtp:
+                if use_tls:
+                    smtp.starttls()
+                smtp.login(username, password)
+                smtp.send_message(message)
     except Exception as exc:
         print(f"[notification-dispatch] email send failed: {exc}")
 
