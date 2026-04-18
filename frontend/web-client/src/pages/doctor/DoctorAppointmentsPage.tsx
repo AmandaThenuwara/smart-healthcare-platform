@@ -31,7 +31,7 @@ const APPOINTMENT_STATUSES: AppointmentStatus[] = [
 ];
 
 const DOCTOR_ALLOWED_STATUS_TRANSITIONS: Record<string, Set<AppointmentStatus>> = {
-  "PAYMENT_PENDING": new Set(["REJECTED", "CANCELLED"]),
+  "PAYMENT_PENDING": new Set(["CONFIRMED", "REJECTED", "CANCELLED"]),
   "PENDING": new Set(["CONFIRMED", "REJECTED", "CANCELLED"]),
   "CONFIRMED": new Set(["COMPLETED", "CANCELLED"]),
   "REJECTED": new Set(),
