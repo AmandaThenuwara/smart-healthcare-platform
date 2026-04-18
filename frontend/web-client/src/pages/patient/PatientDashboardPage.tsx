@@ -8,7 +8,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Hash,
-  Activity,
   ChevronRight,
   Plus,
   Stethoscope

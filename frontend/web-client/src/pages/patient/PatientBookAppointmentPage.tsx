@@ -3,7 +3,7 @@ import { browseApprovedDoctors, getAvailabilitySlots } from "../../api/doctorApi
 import { createAppointment, getAppointmentsByPatient } from "../../api/appointmentApi";
 import { getStoredPatientProfile } from "../../api/patientApi";
 import type { Appointment } from "../../types/appointment";
-import type { AvailabilitySlot, DoctorProfile } from "../../types/doctor";
+import type { AvailabilitySlot, DoctorBrowseItem } from "../../types/doctor";
 import PatientShell from "./PatientShell";
 
 export default function PatientBookAppointmentPage() {
@@ -12,8 +12,8 @@ export default function PatientBookAppointmentPage() {
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [hospital, setHospital] = useState("");
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
+  const [doctors, setDoctors] = useState<DoctorBrowseItem[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorBrowseItem | null>(null);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [consultationType, setConsultationType] = useState<"ONLINE" | "PHYSICAL">("ONLINE");
@@ -56,7 +56,7 @@ export default function PatientBookAppointmentPage() {
     }
   }
 
-  async function loadSlots(doctor: DoctorProfile) {
+  async function loadSlots(doctor: DoctorBrowseItem) {
     setSelectedDoctor(doctor);
     setSelectedSlotId("");
     setSlots([]);

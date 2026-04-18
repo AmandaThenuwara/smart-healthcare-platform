@@ -7,9 +7,7 @@ import {
   Trash2, 
   RefreshCw,
   Info,
-  ChevronRight,
   Edit2,
-  AlertCircle,
   X,
   Save,
   Loader2

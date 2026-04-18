@@ -9,13 +9,11 @@ import {
   LogOut,
   Bell,
   Search,
-  Settings,
-  Activity
+  Settings
 } from "lucide-react";
 import { clearStoredDoctorProfile } from "../../api/doctorApi";
 import { clearStoredPatientProfile } from "../../api/patientApi";
 import { useAuth } from "../../context/AuthContext";
-import LifePulseLogo from "../../assets/img/LifePulse logo.png";
 import LifePulseIcon from "../../assets/img/LifePulse icon.png";
 
 type DoctorShellProps = {
@@ -24,9 +22,6 @@ type DoctorShellProps = {
   children: ReactNode;
 };
 
-const BrandIcon = ({ size = 20 }: { size?: number }) => (
-  <img src={LifePulseIcon} alt="Brand" style={{ width: size, height: size }} className="object-contain" />
-);
 
 export default function DoctorShell({
   title,

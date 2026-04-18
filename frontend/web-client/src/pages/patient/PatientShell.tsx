@@ -7,7 +7,6 @@ import {
   Bell, 
   CreditCard, 
   Stethoscope, 
-  Activity, 
   LogOut,
   Search,
   Settings,
@@ -17,7 +16,6 @@ import {
 import { clearStoredDoctorProfile } from "../../api/doctorApi";
 import { clearStoredPatientProfile } from "../../api/patientApi";
 import { useAuth } from "../../context/AuthContext";
-import LifePulseLogo from "../../assets/img/LifePulse logo.png";
 import LifePulseIcon from "../../assets/img/LifePulse icon.png";
 
 type PatientShellProps = {

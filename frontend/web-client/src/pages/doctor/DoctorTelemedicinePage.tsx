@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { 
-  Stethoscope, 
   Video, 
   ArrowRight,
   ShieldAlert

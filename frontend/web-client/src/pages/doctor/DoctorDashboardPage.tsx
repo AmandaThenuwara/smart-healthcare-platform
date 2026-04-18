@@ -7,8 +7,6 @@ import {
   ShieldCheck, 
   ChevronRight, 
   ArrowRight,
-  Activity,
-  Plus,
   Stethoscope,
   LayoutDashboard
 } from "lucide-react";
