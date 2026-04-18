@@ -20,6 +20,7 @@ from app.services.payment_service import (
     list_payments_by_patient,
     process_stripe_webhook,
     update_payment_status,
+    verify_checkout_session,
 )
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -87,3 +88,11 @@ def change_payment_status(
 ):
     ensure_payment_owner_or_admin(payment_id, current_user)
     return update_payment_status(payment_id, payload)
+
+
+@router.post("/sessions/verify", response_model=PaymentResponse)
+async def verify_payment_session(
+    session_id: str,
+    current_user=Depends(require_roles("PATIENT", "ADMIN")),
+):
+    return verify_checkout_session(session_id)

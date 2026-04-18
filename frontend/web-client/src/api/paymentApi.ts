@@ -50,3 +50,12 @@ export async function updatePaymentStatus(
   });
   return response.data;
 }
+
+export async function verifyStripeSession(
+  sessionId: string
+): Promise<Payment> {
+  const response = await paymentApi.post(
+    `/payments/sessions/verify?session_id=${sessionId}`
+  );
+  return response.data;
+}

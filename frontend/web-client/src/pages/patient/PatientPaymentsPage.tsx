@@ -9,6 +9,7 @@ import {
   createPayment,
   createStripeCheckoutSession,
   getPaymentsByPatient,
+  verifyStripeSession,
 } from "../../api/paymentApi";
 import { getStoredPatientProfile } from "../../api/patientApi";
 import PatientShell from "./PatientShell";
@@ -61,17 +62,30 @@ export default function PatientPaymentsPage() {
 
   useEffect(() => {
     const stripeStatus = searchParams.get("stripe");
+    const sessionId = searchParams.get("session_id");
 
     if (stripeStatus === "success") {
-      setMessage(
-        "Stripe checkout completed. Waiting for backend webhook confirmation. Click Refresh in a few seconds if the status is still pending."
-      );
+      setMessage("Stripe checkout completed. Finalizing your payment status...");
       setError("");
+
+      if (sessionId && patientId) {
+        verifyStripeSession(sessionId)
+          .then(() => {
+            setMessage("Payment verified successfully!");
+            void loadPayments(patientId);
+          })
+          .catch((err) => {
+            console.error(err);
+            setMessage(
+              "Stripe checkout completed. Verification is taking a moment. Please click Refresh if the status is still pending in a few seconds."
+            );
+          });
+      }
     } else if (stripeStatus === "cancel") {
       setError("Stripe checkout was cancelled before payment completion.");
       setMessage("");
     }
-  }, [searchParams]);
+  }, [searchParams, patientId]);
 
   async function loadPayments(currentPatientId: string) {
     setIsLoading(true);

@@ -471,3 +471,43 @@ def process_stripe_webhook(payload: str, stripe_signature: str | None):
                 )
 
     return {"received": True}
+
+
+def verify_checkout_session(session_id: str):
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=503, detail="STRIPE_SECRET_KEY is not configured")
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Stripe session not found or verification failed: {str(exc)}",
+        )
+
+    payment_id = _stripe_value(session, "client_reference_id") or _stripe_value(
+        session.get("metadata", {}), "paymentId"
+    )
+
+    if not payment_id:
+        raise HTTPException(status_code=400, detail="Payment ID could not be retrieved from session")
+
+    payment = _get_payment_or_404(payment_id)
+
+    if session.get("payment_status") == "paid":
+        return _apply_payment_status_change(
+            payment,
+            "PAID",
+            stripe_session_id=session.id,
+            stripe_payment_intent_id=session.get("payment_intent"),
+        )
+    elif session.get("status") == "expired":
+        if payment.get("status") == "PENDING":
+            return _apply_payment_status_change(
+                payment,
+                "FAILED",
+                stripe_session_id=session.id,
+                stripe_payment_intent_id=session.get("payment_intent"),
+            )
+
+    return serialize_payment(payment)
