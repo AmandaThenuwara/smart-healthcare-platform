@@ -1,31 +1,21 @@
 FROM python:3.11-slim
 
+RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Install dependencies for ALL services (using new folder names)
-COPY services/auth_service/requirements.txt ./auth-req.txt
-COPY services/patient_service/requirements.txt ./patient-req.txt
-COPY services/doctor_service/requirements.txt ./doctor-req.txt
-COPY services/appointment_service/requirements.txt ./appointment-req.txt
-COPY services/telemedicine_service/requirements.txt ./tele-req.txt
-COPY services/payment_service/requirements.txt ./payment-req.txt
-COPY services/notification_service/requirements.txt ./notify-req.txt
-COPY services/ai_symptom_service/requirements.txt ./ai-req.txt
-COPY services/gateway/requirements.txt ./gateway-req.txt
+# Copy all requirements first for caching
+COPY services/*/requirements.txt ./
+RUN for f in *.txt; do pip install --no-cache-dir -r "$f"; done
 
-RUN pip install --no-cache-dir \
-    -r auth-req.txt \
-    -r patient-req.txt \
-    -r doctor-req.txt \
-    -r appointment-req.txt \
-    -r tele-req.txt \
-    -r payment-req.txt \
-    -r notify-req.txt \
-    -r ai-req.txt \
-    -r gateway-req.txt
-
-# Copy everything
+# Copy the entire project
 COPY . .
 
-# Run the monolith
-CMD uvicorn main_monolith:app --host 0.0.0.0 --port $PORT
+# Copy configurations
+COPY nginx.conf /etc/nginx/sites-available/default
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Railway uses port 80 (standard for Nginx)
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
