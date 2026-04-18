@@ -75,18 +75,39 @@ def _send_email(to_email: str, subject: str, body: str):
     try:
         if port == 465:
             # Use SSL for port 465
-            with smtplib.SMTP_SSL(resolved_host, port, timeout=20) as smtp:
+            with smtplib.SMTP_SSL(resolved_host, port, timeout=15) as smtp:
                 smtp.login(username, password)
                 smtp.send_message(message)
         else:
             # Use STARTTLS for 587 or others
-            with smtplib.SMTP(resolved_host, port, timeout=20) as smtp:
+            with smtplib.SMTP(resolved_host, port, timeout=15) as smtp:
                 if use_tls:
                     smtp.starttls()
                 smtp.login(username, password)
                 smtp.send_message(message)
     except Exception as exc:
-        print(f"[notification-dispatch] email send failed to {resolved_host} ({host}): {exc}")
+        print(f"[notification-dispatch] primary email send failed to {resolved_host}:{port}: {exc}")
+        # FALLBACK: If 465 failed, try 587 (or vice versa)
+        if port == 465:
+            print("[notification-dispatch] retrying with port 587 (STARTTLS)...")
+            try:
+                with smtplib.SMTP(resolved_host, 587, timeout=15) as smtp:
+                    smtp.starttls()
+                    smtp.login(username, password)
+                    smtp.send_message(message)
+                print("[notification-dispatch] fallback to 587 successful!")
+            except Exception as fexc:
+                print(f"[notification-dispatch] fallback to 587 failed: {fexc}")
+        elif port == 587:
+            print("[notification-dispatch] retrying with port 465 (SSL)...")
+            try:
+                with smtplib.SMTP_SSL(resolved_host, 465, timeout=15) as smtp:
+                    smtp.login(username, password)
+                    smtp.send_message(message)
+                print("[notification-dispatch] fallback to 465 successful!")
+            except Exception as fexc:
+                print(f"[notification-dispatch] fallback to 465 failed: {fexc}")
+
 
 
 def dispatch_notification(
