@@ -2,6 +2,8 @@ import os
 import smtplib
 import socket
 import threading
+import json
+import http.client
 from datetime import datetime, timezone
 from email.message import EmailMessage
 
@@ -44,42 +46,84 @@ def _insert_notification(user_id: str, title: str, message: str, notification_ty
             client.close()
 
 
-def _send_email_task(resolved_host, port, username, password, use_tls, message):
-    # The "Port Hunter" - tries all standard SMTP ports to find the one Railway hasn't blocked
-    ports_to_try = [port, 587, 465, 2525, 25]
-    ports_to_try = list(dict.fromkeys(ports_to_try)) # Remove duplicates
+def _send_via_resend(api_key, to_email, subject, body, sender):
+    try:
+        conn = http.client.HTTPSConnection("api.resend.com")
+        payload = json.dumps({
+            "from": sender,
+            "to": [to_email],
+            "subject": subject,
+            "text": body
+        })
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        }
+        conn.request("POST", "/emails", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+        if res.status in [200, 201]:
+            print(f"[notification-dispatch] email successfully sent via Resend HTTP! ⚡")
+            return True
+        else:
+            print(f"[notification-dispatch] Resend API failed (Status {res.status}): {data.decode()}")
+            return False
+    except Exception as exc:
+        print(f"[notification-dispatch] Resend HTTP error: {exc}")
+        return False
 
-    last_error = ""
+
+def _is_port_open(host, port):
+    try:
+        # Fast 3-second connection check
+        with socket.create_connection((host, port), timeout=3):
+            return True
+    except Exception:
+        return False
+
+
+def _send_email_task(resolved_host, port, username, password, use_tls, message, to_email, subject, body, sender):
+    # BYPASS MODE: Check for Resend API Key first (The unblockable path)
+    resend_key = os.getenv("RESEND_API_KEY")
+    if resend_key:
+        print("[notification-dispatch] hunter using Resend HTTP Bypass...")
+        if _send_via_resend(resend_key, to_email, subject, body, sender):
+            return
+
+    # SMTP MODE (The fallback path)
+    ports_to_try = [port, 587, 465, 2525]
+    ports_to_try = list(dict.fromkeys(ports_to_try))
 
     for attempt_port in ports_to_try:
+        if not _is_port_open(resolved_host, attempt_port):
+            print(f"[notification-dispatch] port {attempt_port} is closed/firewalled. skipping...")
+            continue
+
         try:
-            print(f"[notification-dispatch] hunter checking port {attempt_port}...")
+            print(f"[notification-dispatch] hunter attacking port {attempt_port}...")
             if attempt_port == 465:
-                with smtplib.SMTP_SSL(resolved_host, attempt_port, timeout=8) as smtp:
+                with smtplib.SMTP_SSL(resolved_host, attempt_port, timeout=10) as smtp:
                     smtp.login(username, password)
                     smtp.send_message(message)
-                    print(f"[notification-dispatch] email SENT via port {attempt_port}! 🎉")
+                    print(f"[notification-dispatch] SMTP SUCCESS via port {attempt_port}! 🎉")
                     return
             else:
-                with smtplib.SMTP(resolved_host, attempt_port, timeout=8) as smtp:
+                with smtplib.SMTP(resolved_host, attempt_port, timeout=10) as smtp:
                     try:
                         smtp.starttls()
                     except Exception:
                         pass
                     smtp.login(username, password)
                     smtp.send_message(message)
-                    print(f"[notification-dispatch] email SENT via port {attempt_port}! 🎉")
+                    print(f"[notification-dispatch] SMTP SUCCESS via port {attempt_port}! 🎉")
                     return
         except Exception as exc:
-            last_error = str(exc)
-            print(f"[notification-dispatch] port {attempt_port} blocked or failed: {last_error}")
+            print(f"[notification-dispatch] smtp error on port {attempt_port}: {exc}")
 
-    print(f"[notification-dispatch] ❌ ALL PORTS BLOCKED. Final error: {last_error}")
-    print("[notification-dispatch] RECOMMENDATION: Railway is likely blocking all standard SMTP. To fix this permanently, use a Mail API like SendGrid or Resend via HTTP instead of Gmail SMTP.")
+    print("[notification-dispatch] ❌ ALL PATHS FAILED. Recommendation: Add 'RESEND_API_KEY' for HTTP bypass.")
 
 
 def _send_email(to_email: str, subject: str, body: str):
-    # Default to True if we are attempting to send, but still check if incomplete
     if not _env_bool("EMAIL_NOTIFICATIONS_ENABLED", True):
         return
 
@@ -109,11 +153,10 @@ def _send_email(to_email: str, subject: str, body: str):
     # Send in background thread to prevent 504 timeouts
     thread = threading.Thread(
         target=_send_email_task,
-        args=(resolved_host, port, username, password, use_tls, message),
+        args=(resolved_host, port, username, password, use_tls, message, to_email, subject, body, sender),
     )
     thread.daemon = True
     thread.start()
-
 
 
 def dispatch_notification(
