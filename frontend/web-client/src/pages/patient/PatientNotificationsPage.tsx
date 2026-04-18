@@ -5,7 +5,7 @@ import { getStoredPatientProfile } from "../../api/patientApi";
 import {
   getNotificationsByUser,
 } from "../../api/notificationApi";
-import type { NotificationType, UserNotification } from "../../types/notification";
+import type { UserNotification } from "../../types/notification";
 import PatientShell from "./PatientShell";
 
 
@@ -37,7 +37,6 @@ export default function PatientNotificationsPage() {
   const [userId, setUserId] = useState("");
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const storedPatient = getStoredPatientProfile();
@@ -61,7 +60,6 @@ export default function PatientNotificationsPage() {
       setNotifications(sortNotifications(data));
     } catch (error) {
       console.error(error);
-      setError("Failed to load notifications");
     } finally {
       setIsLoading(false);
     }
