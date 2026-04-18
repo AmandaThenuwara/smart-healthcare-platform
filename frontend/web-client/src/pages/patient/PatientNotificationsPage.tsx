@@ -44,13 +44,6 @@ export default function PatientNotificationsPage() {
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-
-  const [form, setForm] = useState({
-    title: "",
-    message: "",
-    type: "GENERAL" as NotificationType,
-  });
 
   useEffect(() => {
     const storedPatient = getStoredPatientProfile();
@@ -80,43 +73,34 @@ export default function PatientNotificationsPage() {
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setMessage("");
-
-    if (!userId) {
-      setError("Create the patient profile first or make sure a valid userId is available.");
-      return;
-    }
-
-    try {
-      await createNotification({
-        userId,
-        title: form.title.trim(),
-        message: form.message.trim(),
-        type: form.type,
-      });
-
-      setMessage("Notification created successfully.");
-      setForm({
-        title: "",
-        message: "",
-        type: "GENERAL",
-      });
-
-      await loadNotifications(userId);
-    } catch (error) {
-      console.error(error);
-      setError("Failed to create notification");
-    }
-  }
-
   return (
     <PatientShell
-      title="Notifications"
-      subtitle="Create test notifications and view notifications for the current patient user."
+      title="Notification Center"
+      subtitle="Track your appointments, payments, and system alerts in one place."
     >
+      <style>{`
+        .notification-card {
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          border-left: 4px solid transparent !important;
+          cursor: default;
+        }
+        .notification-card:hover {
+          transform: translateX(8px);
+          background-color: #ffffff !important;
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06) !important;
+          border-left: 4px solid #111827 !important;
+          border-color: #e5e7eb !important;
+        }
+        .refresh-btn {
+          transition: all 0.2s ease;
+        }
+        .refresh-btn:hover {
+          background-color: #111827 !important;
+          color: white !important;
+          transform: rotate(15deg);
+        }
+      `}</style>
+
       {!userId ? (
         <div style={cardStyle}>
           <h2 style={sectionTitleStyle}>Patient Profile Needed</h2>
@@ -130,91 +114,52 @@ export default function PatientNotificationsPage() {
         </div>
       ) : (
         <>
-          <div style={cardStyle}>
-            <h2 style={sectionTitleStyle}>Create Notification</h2>
-
-            <form onSubmit={handleSubmit} style={formGridStyle}>
-              <div>
-                <label style={labelStyle}>Title</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  style={inputStyle}
-                  placeholder="Appointment Created"
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Type</label>
-                <select
-                  value={form.type}
-                  onChange={(e) =>
-                    setForm({ ...form, type: e.target.value as NotificationType })
-                  }
-                  style={inputStyle}
-                >
-                  {NOTIFICATION_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Message</label>
-                <textarea
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  style={textareaStyle}
-                  placeholder="Your appointment request was submitted successfully."
-                  required
-                />
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                {error && <p style={errorStyle}>{error}</p>}
-                {message && <p style={successStyle}>{message}</p>}
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <button type="submit" style={buttonStyle}>
-                  Create Notification
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div style={{ ...cardStyle, marginTop: "20px" }}>
+          {/* Create Notification form removed temporarily as requested */}
+          
+          <div style={{ ...cardStyle }}>
             <div style={headerRowStyle}>
-              <h2 style={sectionTitleStyle}>Notification List</h2>
-              <button onClick={() => void loadNotifications(userId)} style={secondaryButtonStyle}>
+              <h2 style={{ ...sectionTitleStyle, color: "#111827", fontWeight: 800 }}>Notification History</h2>
+              <button 
+                onClick={() => void loadNotifications(userId)} 
+                className="refresh-btn"
+                style={secondaryButtonStyle}
+              >
                 Refresh
               </button>
             </div>
 
             {isLoading ? (
-              <p style={textStyle}>Loading notifications...</p>
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <p style={textStyle}>Loading your secure notifications...</p>
+              </div>
             ) : notifications.length === 0 ? (
-              <p style={textStyle}>No notifications found yet.</p>
+              <div style={{ padding: "60px", textAlign: "center", background: "#f9fafb", borderRadius: "12px" }}>
+                <p style={{ ...textStyle, color: "#9ca3af" }}>Your notification tray is empty.</p>
+              </div>
             ) : (
               <div style={notificationListStyle}>
                 {notifications.map((notification) => (
-                  <div key={notification.notificationId} style={notificationCardStyle}>
+                  <div 
+                    key={notification.notificationId} 
+                    className="notification-card"
+                    style={notificationCardStyle}
+                  >
                     <div style={notificationHeaderStyle}>
                       <h3 style={notificationTitleStyle}>{notification.title}</h3>
                       <span style={typeBadgeStyle}>{notification.type}</span>
                     </div>
                     <p style={messageTextStyle}>{notification.message}</p>
-                    <p style={metaTextStyle}>
-                      <strong>Read:</strong> {notification.isRead ? "Yes" : "No"}
-                    </p>
-                    <p style={metaTextStyle}>
-                      <strong>Created At:</strong>{" "}
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </p>
+                    
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #f3f4f6" }}>
+                      <p style={metaTextStyle}>
+                        <span style={{ color: "#9ca3af", fontSize: "11px", fontWeight: 500, letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                          {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </p>
+                      {!notification.isRead && (
+                        <span style={{ height: "8px", width: "8px", background: "#111827", borderRadius: "50%" }}></span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -227,91 +172,45 @@ export default function PatientNotificationsPage() {
 }
 
 const cardStyle: CSSProperties = {
-  background: "white",
+  background: "#ffffff",
   borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  padding: "32px",
+  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
 };
 
 const sectionTitleStyle: CSSProperties = {
   marginTop: 0,
   marginBottom: "14px",
+  fontSize: "24px",
+  letterSpacing: "-0.5px",
 };
 
 const textStyle: CSSProperties = {
   margin: 0,
-  color: "#374151",
+  color: "#4b5563",
+  lineHeight: 1.6,
 };
 
 const linkButtonStyle: CSSProperties = {
   display: "inline-block",
   marginTop: "16px",
   textDecoration: "none",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  background: "#1d4ed8",
+  padding: "12px 24px",
+  borderRadius: "12px",
+  background: "#111827",
   color: "white",
   fontWeight: 600,
-};
-
-const formGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "16px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 600,
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: "110px",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #d1d5db",
-  boxSizing: "border-box",
-  resize: "vertical",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
 };
 
 const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
+  padding: "10px 20px",
   borderRadius: "10px",
-  border: "none",
-  background: "#e5e7eb",
+  border: "1px solid #e5e7eb",
+  background: "white",
   color: "#111827",
   fontWeight: 600,
+  fontSize: "14px",
   cursor: "pointer",
-};
-
-const errorStyle: CSSProperties = {
-  margin: 0,
-  color: "#dc2626",
-};
-
-const successStyle: CSSProperties = {
-  margin: 0,
-  color: "#16a34a",
 };
 
 const headerRowStyle: CSSProperties = {
@@ -319,21 +218,21 @@ const headerRowStyle: CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: "12px",
-  marginBottom: "14px",
+  marginBottom: "32px",
   flexWrap: "wrap",
 };
 
 const notificationListStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "16px",
+  gap: "12px",
 };
 
 const notificationCardStyle: CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "14px",
-  padding: "18px",
-  background: "#fcfcfd",
+  border: "1px solid #f3f4f6",
+  borderRadius: "16px",
+  padding: "20px",
+  background: "#f9fafb",
 };
 
 const notificationHeaderStyle: CSSProperties = {
@@ -341,31 +240,34 @@ const notificationHeaderStyle: CSSProperties = {
   justifyContent: "space-between",
   gap: "12px",
   alignItems: "center",
-  flexWrap: "wrap",
+  marginBottom: "8px",
 };
 
 const notificationTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "12px",
+  margin: 0,
+  fontSize: "16px",
+  fontWeight: 700,
+  color: "#111827",
 };
 
 const typeBadgeStyle: CSSProperties = {
   display: "inline-block",
-  padding: "6px 10px",
-  borderRadius: "999px",
-  background: "#dbeafe",
-  color: "#1e3a8a",
+  padding: "4px 10px",
+  borderRadius: "6px",
+  background: "#f3f4f6",
+  color: "#374151",
   fontWeight: 700,
-  fontSize: "12px",
+  fontSize: "10px",
+  letterSpacing: "0.5px",
 };
 
 const messageTextStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "10px",
-  color: "#374151",
+  margin: 0,
+  color: "#4b5563",
+  fontSize: "14px",
+  lineHeight: 1.5,
 };
 
 const metaTextStyle: CSSProperties = {
-  margin: "6px 0",
-  color: "#374151",
+  margin: 0,
 };
