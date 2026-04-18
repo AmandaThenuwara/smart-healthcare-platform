@@ -49,12 +49,23 @@ def ensure_symptom_indexes():
 
 
 def _get_openai_client() -> OpenAI:
-    if not OPENAI_API_KEY:
+    # Look for the key in multiple possible environment variable names
+    keys_to_try = ["OPENAI_API_KEY", "OPEN_AI_KEY", "OPENAI_KEY", "AI_KEY", "VITE_OPENAI_API_KEY"]
+    found_key = None
+    
+    import os
+    for k in keys_to_try:
+        val = os.getenv(k)
+        if val:
+            found_key = val
+            break
+            
+    if not found_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OPENAI_API_KEY is not configured for ai-symptom-service",
+            detail=f"OpenAI API Key not found. Tried: {', '.join(keys_to_try)}. Please set OPENAI_API_KEY in your environment.",
         )
-    return OpenAI(api_key=OPENAI_API_KEY)
+    return OpenAI(api_key=found_key)
 
 
 def _extract_json_object(text: str) -> dict:
