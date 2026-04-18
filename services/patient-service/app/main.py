@@ -10,16 +10,7 @@ from app.services.patient_service import ensure_patient_indexes
 
 app = FastAPI(title=APP_NAME)
 
-_raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS is handled by Nginx at the gateway level
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
