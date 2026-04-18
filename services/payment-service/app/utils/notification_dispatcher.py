@@ -1,6 +1,7 @@
 import os
 import smtplib
 import socket
+import threading
 from datetime import datetime, timezone
 from email.message import EmailMessage
 
@@ -43,6 +44,39 @@ def _insert_notification(user_id: str, title: str, message: str, notification_ty
             client.close()
 
 
+def _send_email_task(resolved_host, port, username, password, use_tls, message):
+    try:
+        if port == 465:
+            with smtplib.SMTP_SSL(resolved_host, port, timeout=15) as smtp:
+                smtp.login(username, password)
+                smtp.send_message(message)
+        else:
+            with smtplib.SMTP(resolved_host, port, timeout=15) as smtp:
+                if use_tls:
+                    smtp.starttls()
+                smtp.login(username, password)
+                smtp.send_message(message)
+    except Exception as exc:
+        print(f"[notification-dispatch] primary email send failed to {resolved_host}:{port}: {exc}")
+        if port == 465:
+            try:
+                with smtplib.SMTP(resolved_host, 587, timeout=15) as smtp:
+                    smtp.starttls()
+                    smtp.login(username, password)
+                    smtp.send_message(message)
+                print("[notification-dispatch] fallback to 587 successful!")
+            except Exception:
+                pass
+        elif port == 587:
+            try:
+                with smtplib.SMTP_SSL(resolved_host, 465, timeout=15) as smtp:
+                    smtp.login(username, password)
+                    smtp.send_message(message)
+                print("[notification-dispatch] fallback to 465 successful!")
+            except Exception:
+                pass
+
+
 def _send_email(to_email: str, subject: str, body: str):
     # Default to True if we are attempting to send, but still check if incomplete
     if not _env_bool("EMAIL_NOTIFICATIONS_ENABLED", True):
@@ -65,48 +99,19 @@ def _send_email(to_email: str, subject: str, body: str):
     message["Subject"] = subject
     message.set_content(body)
 
-    # Force IPv4 resolution to prevent "Network is unreachable" in IPv6-hostile environments
+    # Force IPv4 resolution
     try:
         resolved_host = socket.gethostbyname(host)
-    except Exception as dns_exc:
-        print(f"[notification-dispatch] DNS resolution failed for {host}: {dns_exc}")
+    except Exception:
         resolved_host = host
 
-    try:
-        if port == 465:
-            # Use SSL for port 465
-            with smtplib.SMTP_SSL(resolved_host, port, timeout=15) as smtp:
-                smtp.login(username, password)
-                smtp.send_message(message)
-        else:
-            # Use STARTTLS for 587 or others
-            with smtplib.SMTP(resolved_host, port, timeout=15) as smtp:
-                if use_tls:
-                    smtp.starttls()
-                smtp.login(username, password)
-                smtp.send_message(message)
-    except Exception as exc:
-        print(f"[notification-dispatch] primary email send failed to {resolved_host}:{port}: {exc}")
-        # FALLBACK: If 465 failed, try 587 (or vice versa)
-        if port == 465:
-            print("[notification-dispatch] retrying with port 587 (STARTTLS)...")
-            try:
-                with smtplib.SMTP(resolved_host, 587, timeout=15) as smtp:
-                    smtp.starttls()
-                    smtp.login(username, password)
-                    smtp.send_message(message)
-                print("[notification-dispatch] fallback to 587 successful!")
-            except Exception as fexc:
-                print(f"[notification-dispatch] fallback to 587 failed: {fexc}")
-        elif port == 587:
-            print("[notification-dispatch] retrying with port 465 (SSL)...")
-            try:
-                with smtplib.SMTP_SSL(resolved_host, 465, timeout=15) as smtp:
-                    smtp.login(username, password)
-                    smtp.send_message(message)
-                print("[notification-dispatch] fallback to 465 successful!")
-            except Exception as fexc:
-                print(f"[notification-dispatch] fallback to 465 failed: {fexc}")
+    # Send in background thread to prevent 504 timeouts
+    thread = threading.Thread(
+        target=_send_email_task,
+        args=(resolved_host, port, username, password, use_tls, message),
+    )
+    thread.daemon = True
+    thread.start()
 
 
 
