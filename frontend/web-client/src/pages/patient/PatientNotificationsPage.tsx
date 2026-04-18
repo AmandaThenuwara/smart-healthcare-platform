@@ -53,7 +53,6 @@ export default function PatientNotificationsPage() {
 
   async function loadNotifications(currentUserId: string) {
     setIsLoading(true);
-    setError("");
 
     try {
       const data = await getNotificationsByUser(currentUserId);
