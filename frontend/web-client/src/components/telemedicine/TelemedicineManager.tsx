@@ -72,9 +72,10 @@ export default function TelemedicineManager({
       setAppointmentLookupId(created.appointmentId);
       setSessionLookupId(created.sessionId);
       setMessage("Telemedicine session created successfully.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError("Failed to create telemedicine session");
+      const detail = error.response?.data?.detail;
+      setError(detail || "Failed to create telemedicine session");
     } finally {
       setIsBusy(false);
     }
@@ -95,9 +96,10 @@ export default function TelemedicineManager({
       setCurrentSession(session);
       setStatusSelection(session.status);
       setMessage("Telemedicine session loaded by appointment ID.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError("Failed to load telemedicine session by appointment ID");
+      const detail = error.response?.data?.detail;
+      setError(detail || "Failed to load telemedicine session by appointment ID");
     } finally {
       setIsBusy(false);
     }
@@ -118,9 +120,10 @@ export default function TelemedicineManager({
       setCurrentSession(session);
       setStatusSelection(session.status);
       setMessage("Telemedicine session loaded by session ID.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError("Failed to load telemedicine session by session ID");
+      const detail = error.response?.data?.detail;
+      setError(detail || "Failed to load telemedicine session by session ID");
     } finally {
       setIsBusy(false);
     }
@@ -143,9 +146,10 @@ export default function TelemedicineManager({
       );
       setCurrentSession(updated);
       setMessage(`Telemedicine session updated to ${updated.status}.`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError("Failed to update telemedicine session status");
+      const detail = error.response?.data?.detail;
+      setError(detail || "Failed to update telemedicine session status");
     } finally {
       setIsBusy(false);
     }
